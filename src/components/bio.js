@@ -11,23 +11,19 @@ import { StaticImage } from "gatsby-plugin-image"
 
 const Bio = () => {
     const data = useStaticQuery(graphql`
-    query BioQuery {
-      site {
-        siteMetadata {
-          author {
-            name
-            summary
-          }
-          social {
-            twitter
-          }
+        query BioQuery {
+            site {
+                siteMetadata {
+                    social {
+                        twitter
+                        github
+                    }
+                }
+            }
         }
-      }
-    }
-  `)
+    `)
 
-    // Set these values by editing "siteMetadata" in gatsby-config.js
-    const social = data.site.siteMetadata?.social
+    const { twitter, github } = data.site.siteMetadata?.social
 
     return (
         <div className="bio">
@@ -35,18 +31,37 @@ const Bio = () => {
                 className="bio-avatar"
                 layout="fixed"
                 formats={["auto", "webp", "avif"]}
-                src="../images/profile-pic.png"
-                width={50}
-                height={50}
+                src="../images/profile-pic.jpeg"
+                width={40}
+                height={40}
                 quality={95}
                 alt="Profile picture"
             />
-            <p style={{
-                fontSize: `0.8rem`,
-                lineHeight: `1.6em`,
-            }}>
-                Software Developer at <a href="https://axiallon.com">Axiallon</a><br />
-                Writings about technology and my <a target="_new" href="https://i.imgur.com/wU77LHF.jpg">dalmatian</a>
+            <p
+                style={{
+                    fontSize: `0.8rem`,
+                    lineHeight: `1.6em`,
+                }}
+            >
+                <strong>Josh Terrill</strong> - Software Developer at{" "}
+                <a href="https://axiallon.com">Axiallon</a>
+                <br />
+                Follow me on{" "}
+                <a
+                    href={`https://twitter.com/${twitter}`}
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    Twitter
+                </a>{" "}
+                and{" "}
+                <a
+                    href={`https://github.com/${github}`}
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    Github
+                </a>
             </p>
         </div>
     )

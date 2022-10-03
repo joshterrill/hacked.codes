@@ -23,8 +23,15 @@ Oh, and here's a great quote from this Wikipedia on
 
 You can also write code blocks here!
 
-```js
+```typescript{numberLines: true}
 const saltyDuckEgg = "chinese preserved food product"
+function thisIsATest(event) {
+    console.log(event);
+    for (let i = 0; i < test.length; i++) {
+        console.log(arr[i].data);
+        loop(arr[i]);
+    }
+}
 ```
 
 | Number | Title                                    | Year |
@@ -137,7 +144,7 @@ This is a paragraph.
 - `code goes` here in this line
 - **bold** goes here
 
-```markdown
+```shell{promptUser: alice}{promptHost: dev.localhost}
 - `code goes` here in this line
 - **bold** goes here
 ```
@@ -226,6 +233,6 @@ This paragraph has some `code` in it.
 
     This paragraph has some `code` in it.
 
-![Alt Text](https://placehold.it/200x50 "Image Title")
+![Alt Text](https://via.placeholder.com/200x50 "Image Title")
 
-    ![Alt Text](https://placehold.it/200x50 "Image Title")
+    ![Alt Text](https://via.placeholder.com/200x50 "Image Title")
