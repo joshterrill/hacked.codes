@@ -32,8 +32,8 @@ const Bio = () => {
                 layout="fixed"
                 formats={["auto", "webp", "avif"]}
                 src="../images/profile-pic.jpeg"
-                width={40}
-                height={40}
+                width={60}
+                height={60}
                 quality={95}
                 alt="Profile picture"
             />
@@ -61,7 +61,7 @@ const Bio = () => {
                     rel="noreferrer"
                 >
                     Github
-                </a>
+                </a><br />Visit <a href="https://joshterrill.com" target="_blank" rel="noreferrer">my site</a> to see some of my projects
             </p>
         </div>
     )
