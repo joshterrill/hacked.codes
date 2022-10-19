@@ -1,11 +1,11 @@
 {
-  "name": "dangerous.dev",
+  "name": "hacked.codes",
   "private": true,
   "description": "Articles on hacking, reverse engineering, and software development.",
   "version": "0.1.0",
   "author": "Josh Terrill",
   "bugs": {
-    "url": "https://github.com/joshterrill/dangerous.dev/issues"
+    "url": "https://github.com/joshterrill/hacked.codes/issues"
   },
   "dependencies": {
     "gatsby": "^4.24.0",
@@ -29,14 +29,14 @@
   "devDependencies": {
     "prettier": "^2.7.1"
   },
-  "homepage": "https://github.com/joshterrill/dangerous.dev#readme",
+  "homepage": "https://github.com/joshterrill/hacked.codes#readme",
   "keywords": [
     "gatsby"
   ],
   "license": "0BSD",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joshterrill/dangerous.dev.git"
+    "url": "git+https://github.com/joshterrill/hacked.codes.git"
   },
   "scripts": {
     "build": "gatsby build",

@@ -1,6 +1,6 @@
 module.exports = {
     siteMetadata: {
-        title: `dangerous.dev`,
+        title: `hacked.codes`,
         description: `Articles on hacking, reverse engineering, and software development.`,
         author: {
             name: `Josh Terrill`,

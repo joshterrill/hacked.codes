@@ -1,15 +1,13 @@
 <!-- AUTO-GENERATED-CONTENT:START (STARTER) -->
 <p align="center">
-  <a href="https://dangerous.dev">
-    <img alt="Dangerous Dev" src="./src/images/warning.png" width="60" />
+  <a href="https://hacked.codes">
+    <img alt="Hacked Codes" src="./src/images/warning.png" width="60" />
   </a>
 </p>
 <h1 align="center">
-  Dangerous Dev
+  Hacked Codes (WIP)
 </h1>
 
-## 💫 Deploy
+[![Netlify Status](https://api.netlify.com/api/v1/badges/6d6a6654-cbae-4add-a3fd-f186dfb19243/deploy-status)](https://app.netlify.com/sites/frabjous-jelly-6a1a82/deploys)
 
-[Build, Deploy, and Host On The Only Cloud Built For Gatsby](https://www.gatsbyjs.com/products/cloud/)
-
-Gatsby Cloud is an end-to-end cloud platform specifically built for the Gatsby framework that combines a modern developer experience with an optimized, global edge network.
+Code repository and static assets for https://hacked.codes blog
