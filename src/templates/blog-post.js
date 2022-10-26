@@ -10,6 +10,11 @@ const BlogPostTemplate = ({
     location,
 }) => {
     const siteTitle = site.siteMetadata?.title || `Title`
+    const tags = post.frontmatter?.tags || [];
+
+    const renderTag = (tag, i) => {
+        return <a href={`/tags/${tag}/`}>{tag}{i !== post.frontmatter.tags.length - 1 ? ', ' : ''}</a>;
+    }
 
     return (
         <Layout location={location} title={siteTitle}>
@@ -25,8 +30,16 @@ const BlogPostTemplate = ({
                 <section
                     dangerouslySetInnerHTML={{ __html: post.html }}
                     itemProp="articleBody"
+                    className="article-body"
                 />
-                <hr />
+
+                {tags.length ? 
+                    <section className="post-tags">
+                        Tags: {post.frontmatter.tags.map((tag, i) => renderTag(tag, i))}
+                    </section> : ''
+                }
+
+                <hr className="content-footer-spacer" />
                 <footer>
                     <Bio />
                 </footer>
@@ -91,6 +104,7 @@ export const pageQuery = graphql`
                 title
                 date(formatString: "MMMM DD, YYYY")
                 description
+                tags
             }
         }
         previous: markdownRemark(id: { eq: $previousPostId }) {
