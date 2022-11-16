@@ -1,44 +1,31 @@
-import * as React from "react"
-import { Link, graphql } from "gatsby"
+import * as React from "react";
+import { Link, graphql } from "gatsby";
 // import { StaticImage } from "gatsby-plugin-image"
 
-import Bio from "../components/bio"
-import Layout from "../components/layout"
-import Seo from "../components/seo"
+import Bio from "../components/bio";
+import Layout from "../components/layout";
+import Seo from "../components/seo";
 
 const BlogIndex = ({ data, location }) => {
-    const siteTitle = data.site.siteMetadata?.title || `Title`
-    const siteDescription = data.site.siteMetadata?.description || `Description`
-    const posts = data.allMarkdownRemark.nodes
+    const siteTitle = data.site.siteMetadata?.title || `Title`;
+    const siteDescription = data.site.siteMetadata?.description || `Description`;
+    const posts = data.allMarkdownRemark.nodes;
 
     if (posts.length === 0) {
         return (
             <Layout location={location} title={siteTitle}>
                 <Bio />
                 <p>
-                    No blog posts found. Add markdown posts to "content/blog"
-                    (or the directory you specified for the
-                    "gatsby-source-filesystem" plugin in gatsby-config.js).
+                    No blog posts found. Add markdown posts to "content/blog" (or the directory you
+                    specified for the "gatsby-source-filesystem" plugin in gatsby-config.js).
                 </p>
             </Layout>
-        )
+        );
     }
 
     return (
         <Layout location={location} title={siteTitle}>
             <div className="bio">
-                {" "}
-                {/* todo: change this class */}
-                {/* <StaticImage
-                    className="bio-avatar" // todo: change this class
-                    layout="fixed"
-                    formats={["auto", "webp", "avif"]}
-                    src="../images/warning.png"
-                    width={50}
-                    height={44}
-                    quality={95}
-                    alt="Warning Icon"
-                /> */}
                 <p
                     style={{
                         fontSize: `0.8rem`,
@@ -50,7 +37,7 @@ const BlogIndex = ({ data, location }) => {
             </div>
             <ol style={{ listStyle: `none` }}>
                 {posts.map(post => {
-                    const title = post.frontmatter.title || post.fields.slug
+                    const title = post.frontmatter.title || post.fields.slug;
 
                     return (
                         <li key={post.fields.slug}>
@@ -61,46 +48,32 @@ const BlogIndex = ({ data, location }) => {
                             >
                                 <header>
                                     <h2>
-                                        <Link
-                                            to={post.fields.slug}
-                                            itemProp="url"
-                                        >
-                                            <span itemProp="headline">
-                                                {title}
-                                            </span>
+                                        <Link to={post.fields.slug} itemProp="url">
+                                            <span itemProp="headline">{title}</span>
                                         </Link>
                                     </h2>
-                                    <small className="post-date">
-                                        {post.frontmatter.date}
-                                    </small>
+                                    <small className="post-date">{post.frontmatter.date}</small>
                                 </header>
                                 <section>
                                     <p
                                         dangerouslySetInnerHTML={{
-                                            __html:
-                                                post.frontmatter.description ||
-                                                post.excerpt,
+                                            __html: post.frontmatter.description || post.excerpt,
                                         }}
                                         itemProp="description"
                                     />
                                 </section>
                             </article>
                         </li>
-                    )
+                    );
                 })}
             </ol>
         </Layout>
-    )
-}
+    );
+};
 
-export default BlogIndex
+export default BlogIndex;
 
-/**
- * Head export to define metadata for the page
- *
- * See: https://www.gatsbyjs.com/docs/reference/built-in-components/gatsby-head/
- */
-export const Head = () => <Seo title="All posts" />
+export const Head = () => <Seo title="Home" />;
 
 export const pageQuery = graphql`
     query {
@@ -125,4 +98,4 @@ export const pageQuery = graphql`
             }
         }
     }
-`
+`;

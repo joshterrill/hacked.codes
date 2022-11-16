@@ -1,28 +1,26 @@
-import * as React from "react"
-import { Link, graphql } from "gatsby"
+import * as React from "react";
+import { Link, graphql } from "gatsby";
 
-import Bio from "../components/bio"
-import Layout from "../components/layout"
-import Seo from "../components/seo"
+import Bio from "../components/bio";
+import Layout from "../components/layout";
+import Seo from "../components/seo";
 
-const BlogPostTemplate = ({
-    data: { previous, next, site, markdownRemark: post },
-    location,
-}) => {
-    const siteTitle = site.siteMetadata?.title || `Title`
+const BlogPostTemplate = ({ data: { previous, next, site, markdownRemark: post }, location }) => {
+    const siteTitle = site.siteMetadata?.title || `Title`;
     const tags = post.frontmatter?.tags || [];
 
     const renderTag = (tag, i) => {
-        return <a href={`/tags/${tag}/`}>{tag}{i !== post.frontmatter.tags.length - 1 ? ', ' : ''}</a>;
-    }
+        return (
+            <a key={`tag-${tag}`} href={`/tags/${tag}/`}>
+                {tag}
+                {i !== post.frontmatter.tags.length - 1 ? ", " : ""}
+            </a>
+        );
+    };
 
     return (
         <Layout location={location} title={siteTitle}>
-            <article
-                className="blog-post"
-                itemScope
-                itemType="http://schema.org/Article"
-            >
+            <article className="blog-post" itemScope itemType="http://schema.org/Article">
                 <header>
                     <h1 itemProp="headline">{post.frontmatter.title}</h1>
                     <p>{post.frontmatter.date}</p>
@@ -33,11 +31,13 @@ const BlogPostTemplate = ({
                     className="article-body"
                 />
 
-                {tags.length ? 
+                {tags.length ? (
                     <section className="post-tags">
                         Tags: {post.frontmatter.tags.map((tag, i) => renderTag(tag, i))}
-                    </section> : ''
-                }
+                    </section>
+                ) : (
+                    ""
+                )}
 
                 <hr className="content-footer-spacer" />
                 <footer>
@@ -71,8 +71,8 @@ const BlogPostTemplate = ({
                 </ul>
             </nav>
         </Layout>
-    )
-}
+    );
+};
 
 export const Head = ({ data: { markdownRemark: post } }) => {
     return (
@@ -80,17 +80,13 @@ export const Head = ({ data: { markdownRemark: post } }) => {
             title={post.frontmatter.title}
             description={post.frontmatter.description || post.excerpt}
         />
-    )
-}
+    );
+};
 
-export default BlogPostTemplate
+export default BlogPostTemplate;
 
 export const pageQuery = graphql`
-    query BlogPostBySlug(
-        $id: String!
-        $previousPostId: String
-        $nextPostId: String
-    ) {
+    query BlogPostBySlug($id: String!, $previousPostId: String, $nextPostId: String) {
         site {
             siteMetadata {
                 title
@@ -124,4 +120,4 @@ export const pageQuery = graphql`
             }
         }
     }
-`
+`;

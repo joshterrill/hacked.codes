@@ -5,9 +5,9 @@
  * See: https://www.gatsbyjs.com/docs/use-static-query/
  */
 
-import * as React from "react"
-import { useStaticQuery, graphql } from "gatsby"
-import { StaticImage } from "gatsby-plugin-image"
+import * as React from "react";
+import { useStaticQuery, graphql } from "gatsby";
+import { StaticImage } from "gatsby-plugin-image";
 
 const Bio = () => {
     const data = useStaticQuery(graphql`
@@ -21,9 +21,9 @@ const Bio = () => {
                 }
             }
         }
-    `)
+    `);
 
-    const { twitter, github } = data.site.siteMetadata?.social
+    const { twitter, github } = data.site.siteMetadata?.social;
 
     return (
         <div className="bio">
@@ -47,24 +47,22 @@ const Bio = () => {
                 <a href="https://axiallon.com">Axiallon</a>
                 <br />
                 Follow me on{" "}
-                <a
-                    href={`https://twitter.com/${twitter}`}
-                    target="_blank"
-                    rel="noreferrer"
-                >
+                <a href={`https://twitter.com/${twitter}`} target="_blank" rel="noreferrer">
                     Twitter
                 </a>{" "}
                 and{" "}
-                <a
-                    href={`https://github.com/${github}`}
-                    target="_blank"
-                    rel="noreferrer"
-                >
+                <a href={`https://github.com/${github}`} target="_blank" rel="noreferrer">
                     Github
-                </a><br />Visit <a href="https://joshterrill.com" target="_blank" rel="noreferrer">my personal site</a> to see some of my projects
+                </a>
+                <br />
+                Visit{" "}
+                <a href="https://joshterrill.com" target="_blank" rel="noreferrer">
+                    my personal site
+                </a>{" "}
+                to see some of my projects
             </p>
         </div>
-    )
-}
+    );
+};
 
-export default Bio
+export default Bio;

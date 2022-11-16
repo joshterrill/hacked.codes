@@ -237,3 +237,15 @@ This paragraph has some `code` in it.
 ![Alt Text](https://via.placeholder.com/200x50 "Image Title")
 
     ![Alt Text](https://via.placeholder.com/200x50 "Image Title")
+
+
+Text with[^1] reference footnote[^1].
+Text with inline footnote[^2].
+
+![Cat](http://placekitten.com/g/80/120)
+_This is a cat [^3]
+
+
+[^1]: [This is the named reference](https://www.google.com)
+[^2]: This is a fig reference
+[^3]: This is a fig reference

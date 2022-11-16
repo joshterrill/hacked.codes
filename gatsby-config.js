@@ -91,13 +91,11 @@ module.exports = {
                                                 language: "superscript",
                                                 extend: "javascript",
                                                 definition: {
-                                                    superscript_types:
-                                                        /(SuperType)/,
+                                                    superscript_types: /(SuperType)/,
                                                 },
                                                 insertBefore: {
                                                     function: {
-                                                        superscript_keywords:
-                                                            /(superif|superelse)/,
+                                                        superscript_keywords: /(superif|superelse)/,
                                                     },
                                                 },
                                             },
@@ -115,9 +113,24 @@ module.exports = {
                                         escapeEntities: {},
                                     },
                                 },
+                                {
+                                    resolve: `gatsby-remark-footnotes`,
+                                    options: {
+                                        footnoteBackRefPreviousElementDisplay: "inline",
+                                        footnoteBackRefDisplay: "inline",
+                                        footnoteBackRefInnerText: "^", // Defaults to: "↩"
+                                        //use if you want the Wikipedia style ^ link without an underline beneath it
+                                        footnoteBackRefAnchorStyle: `text-decoration: none;`,
+                                        //use "front" for Wikipedia style ^ links
+                                        footnoteBackRefInnerTextStartPosition: "front",
+                                        useFootnoteMarkerText: false, // Defaults to false
+                                        useCustomDivider: "<hr/><strong>References:</strong>", // Defaults to <hr/>
+                                    },
+                                },
                             ],
                         },
                     },
+
                     `gatsby-remark-copy-linked-files`,
                     `gatsby-remark-smartypants`,
                 ],
@@ -147,17 +160,11 @@ module.exports = {
                                 return Object.assign({}, node.frontmatter, {
                                     description: node.excerpt,
                                     date: node.frontmatter.date,
-                                    url:
-                                        site.siteMetadata.siteUrl +
-                                        node.fields.slug,
-                                    guid:
-                                        site.siteMetadata.siteUrl +
-                                        node.fields.slug,
-                                    custom_elements: [
-                                        { "content:encoded": node.html },
-                                    ],
-                                })
-                            })
+                                    url: site.siteMetadata.siteUrl + node.fields.slug,
+                                    guid: site.siteMetadata.siteUrl + node.fields.slug,
+                                    custom_elements: [{ "content:encoded": node.html }],
+                                });
+                            });
                         },
                         query: `
               {
@@ -179,7 +186,7 @@ module.exports = {
               }
             `,
                         output: "/rss.xml",
-                        title: "Gatsby Starter Blog RSS Feed",
+                        title: "hacked.codes RSS Feed",
                     },
                 ],
             },
@@ -207,4 +214,4 @@ module.exports = {
             },
         },
     ],
-}
+};
