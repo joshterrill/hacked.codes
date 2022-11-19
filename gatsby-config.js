@@ -6,7 +6,7 @@ module.exports = {
             name: `Josh Terrill`,
             avatar: `/images/profile-pic.jpeg`,
         },
-        siteUrl: `https://gatsbystarterblogsource.gatsbyjs.io/`,
+        siteUrl: `https://hacked.codes/`,
         social: {
             twitter: `joshterrill`,
             github: `joshterrill`,
@@ -194,23 +194,13 @@ module.exports = {
         {
             resolve: `gatsby-plugin-manifest`,
             options: {
-                name: `Gatsby Starter Blog`,
-                short_name: `GatsbyJS`,
+                name: `hacked.codes Blog`,
+                short_name: `hacked.codes`,
                 start_url: `/`,
                 background_color: `#ffffff`,
-                // This will impact how browsers show your PWA/website
-                // https://css-tricks.com/meta-theme-color-and-trickery/
-                // theme_color: `#663399`,
+                theme_color: `#1d1e26`,
                 display: `minimal-ui`,
-                icon: `src/images/warning.png`, // This path is relative to the root of the site.
-            },
-        },
-        {
-            resolve: "gatsby-plugin-mailchimp",
-            options: {
-                endpoint:
-                    "https://dev.us10.list-manage.com/subscribe/post?u=6c8b8cb7ec7947ed35a6aae2d&amp;id=6cd4a70958&amp;f_id=000a31e2f0",
-                timeout: 3500,
+                icon: `src/images/favicon.png`,
             },
         },
     ],

@@ -443,5 +443,13 @@ a:focus {
 }
 
 .highlight {
+    padding: 4px 2px 4px 2px;
+}
+
+.highlight.yellow {
     background: #ffff99;
+}
+
+.highlight.green {
+    background: #99ffbd;
 }

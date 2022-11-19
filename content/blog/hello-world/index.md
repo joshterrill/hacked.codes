@@ -5,11 +5,11 @@ description: "Hello World"
 tags: ["hello", "world"]
 ---
 
-This is my first post on my new fake blog! How exciting!
+This is my first post on my new fake blog! <span class="highlight yellow">How exciting!</span>
 
 I'm sure I'll write a lot more interesting things in the future.
 
-Oh, and here's a great quote from this Wikipedia on
+Oh, and here's <span class="highlight green">a great quote</span> from this Wikipedia on
 [salted duck eggs](https://en.wikipedia.org/wiki/Salted_duck_egg).
 
 > A salted duck egg is a Chinese preserved food product made by soaking duck
@@ -220,6 +220,49 @@ _single underscores_
 
 **double asterisks**
 
+<iframe
+scrolling="no"
+style="width:100%!important;height:220px;border:1px #ccc solid !important"
+src="https://buttondown.email/hacked.codes?as_embed=true"
+></iframe><br /><br />
+
+<div>
+<p style='margin-left:0.7em; display: inline-block; font-size: 5vh;'>
+<img src="https://via.placeholder.com/250" style="zoom:70%;  float:right; padding:0.7em"/>
+<b>isomorphism</b>  &rarr;  In mathematics, an isomorphism is a structure-preserving mapping between two structures of the same type that can be reversed by an inverse mapping. A isomorphism is a structure-preserving mapping between two structures of the same type that can be reversed by an inverse mapping.<br>
+</p>
+</div>
+
+<div style='background-color:#EDF2F7; color:#1A2067; border-left: solid #718096 4px; border-radius: 4px;'>
+<p style='padding:0.7em; margin-left:0.7em; display: inline-block;'>
+<img src="https://via.placeholder.com/150" style="zoom:70%;  float:right; padding:0.7em"/>
+<b>isomorphism</b>  &rarr;  In mathematics, an isomorphism is a structure-preserving mapping between two structures of the same type that can be reversed by an inverse mapping.<br>
+</p>
+</div>
+<div class="resizeme" style="  resize: both;
+  margin: 0;
+  padding: 0;
+  height: 75px;
+  width: 500px;
+  background-color: lightblue;
+  overflow: hidden;">
+  <svg
+    width="100%"
+    height="100%"
+    viewBox="0 0 500 75"
+    preserveAspectRatio="xMinYMid meet"
+    style="background-color:green"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+  >
+        <text
+          x="0"
+          y="75"
+          font-size="75"
+          fill="black"
+        >█Resize This█</text>
+      </svg>
+</div>
 **double underscores**
 
     *single asterisks*
