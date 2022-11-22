@@ -169,6 +169,7 @@ module.exports = {
                         query: `
               {
                 allMarkdownRemark(
+                  filter: { frontmatter: { published: { eq: true } } },
                   sort: { order: DESC, fields: [frontmatter___date] },
                 ) {
                   nodes {
