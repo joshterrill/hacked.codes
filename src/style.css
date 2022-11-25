@@ -453,3 +453,11 @@ a:focus {
 .highlight.green {
     background: #99ffbd;
 }
+
+.built-with {
+    float: left;
+}
+
+.contact-pgp {
+    float: right;
+}
