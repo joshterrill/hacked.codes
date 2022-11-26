@@ -5,6 +5,7 @@ import { Link, graphql } from "gatsby";
 import Bio from "../components/bio";
 import Layout from "../components/layout";
 import Seo from "../components/seo";
+import Tags from "../components/tags";
 
 const BlogIndex = ({ data, location }) => {
     const siteTitle = data.site.siteMetadata?.title || `Title`;
@@ -38,6 +39,7 @@ const BlogIndex = ({ data, location }) => {
             <ol style={{ listStyle: `none` }}>
                 {posts.map(post => {
                     const title = post.frontmatter.title || post.fields.slug;
+                    const tags = post.frontmatter.tags || [];
 
                     return (
                         <li key={post.fields.slug}>
@@ -62,6 +64,7 @@ const BlogIndex = ({ data, location }) => {
                                         itemProp="description"
                                     />
                                 </section>
+                                <Tags tags={tags}/>
                             </article>
                         </li>
                     );

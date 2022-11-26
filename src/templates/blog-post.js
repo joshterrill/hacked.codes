@@ -4,19 +4,11 @@ import { Link, graphql } from "gatsby";
 import Bio from "../components/bio";
 import Layout from "../components/layout";
 import Seo from "../components/seo";
+import Tags from "../components/tags";
 
 const BlogPostTemplate = ({ data: { previous, next, site, markdownRemark: post }, location }) => {
     const siteTitle = site.siteMetadata?.title || `Title`;
     const tags = post.frontmatter?.tags || [];
-
-    const renderTag = (tag, i) => {
-        return (
-            <a key={`tag-${tag}`} href={`/tags/${tag}/`}>
-                {tag}
-                {i !== post.frontmatter.tags.length - 1 ? ", " : ""}
-            </a>
-        );
-    };
 
     return (
         <Layout location={location} title={siteTitle}>
@@ -31,13 +23,7 @@ const BlogPostTemplate = ({ data: { previous, next, site, markdownRemark: post }
                     className="article-body"
                 />
 
-                {tags.length ? (
-                    <section className="post-tags">
-                        Tags: {post.frontmatter.tags.map((tag, i) => renderTag(tag, i))}
-                    </section>
-                ) : (
-                    ""
-                )}
+                <Tags tags={tags} />
 
                 <hr className="content-footer-spacer" />
                 <footer>

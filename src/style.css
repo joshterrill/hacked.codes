@@ -440,6 +440,7 @@ a:focus {
     font-family: 'Source Code Pro', monospace;
     font-size: 0.8rem;
     line-height: 1.6em;
+    margin-top: var(--spacing-1);
 }
 
 .highlight {
