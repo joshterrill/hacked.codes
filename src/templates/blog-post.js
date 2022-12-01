@@ -8,14 +8,16 @@ import Tags from "../components/tags";
 
 const BlogPostTemplate = ({ data: { previous, next, site, markdownRemark: post }, location }) => {
     const siteTitle = site.siteMetadata?.title || `Title`;
+    const image = post.frontmatter?.image || null;
     const tags = post.frontmatter?.tags || [];
 
     return (
         <Layout location={location} title={siteTitle}>
             <article className="blog-post" itemScope itemType="http://schema.org/Article">
                 <header>
+                    {image && <img className="post-header-image" src={image} alt="post-header" />}
                     <h1 itemProp="headline">{post.frontmatter.title}</h1>
-                    <p>{post.frontmatter.date}</p>
+                    <p className="post-date">{post.frontmatter.date}</p>
                 </header>
                 <section
                     dangerouslySetInnerHTML={{ __html: post.html }}
@@ -65,6 +67,7 @@ export const Head = ({ data: { markdownRemark: post } }) => {
         <Seo
             title={post.frontmatter.title}
             description={post.frontmatter.description || post.excerpt}
+            image={post.frontmatter.image}
         />
     );
 };
@@ -87,6 +90,7 @@ export const pageQuery = graphql`
                 date(formatString: "MMMM DD, YYYY")
                 description
                 tags
+                image
             }
         }
         previous: markdownRemark(id: { eq: $previousPostId }) {

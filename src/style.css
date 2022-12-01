@@ -293,7 +293,7 @@ a:focus {
     margin-bottom: var(--spacing-0);
 }
 
-.post-list-item .post-date {
+.post-date {
     font-family: 'Source Code Pro', monospace;
     font-size: 68%;
 }
@@ -324,7 +324,7 @@ a:focus {
 }
 
 .blog-post header h1 {
-    margin: var(--spacing-0) var(--spacing-0) var(--spacing-4) var(--spacing-0);
+    margin: var(--spacing-4) var(--spacing-0) var(--spacing-2) var(--spacing-0);
 }
 
 .blog-post header p {
@@ -461,4 +461,8 @@ a:focus {
 
 .contact-pgp {
     float: right;
+}
+
+.post-header-image {
+    width: 100%;
 }

@@ -4,8 +4,8 @@ const Tags = (props) => {
 
     const renderTag = (tag, index, tagCount) => {
         return (
-            <span>
-                <a key={`tag-${tag}`} href={`/tags/${tag}/`} className={`tag ${tag}`}>
+            <span key={`tag-${tag}`}>
+                <a href={`/tags/${tag}/`} className={`tag ${tag}`}>
                     {tag}
                 </a>
                 {index + 1 < tagCount ? ", " : ""}
