@@ -295,7 +295,7 @@ a:focus {
 
 .post-date {
     font-family: 'Source Code Pro', monospace;
-    font-size: 68%;
+    font-size: 0.75rem;
 }
 
 .header-link-home {
@@ -327,9 +327,13 @@ a:focus {
     margin: var(--spacing-4) var(--spacing-0) var(--spacing-2) var(--spacing-0);
 }
 
-.blog-post header p {
+.blog-post header p:not(.post-date) {
     font-size: var(--fontSize-2);
     font-family: var(--font-heading);
+}
+
+.blog-post div {
+    margin-bottom: var(--spacing-4);
 }
 
 .blog-post-nav ul {
@@ -465,4 +469,8 @@ a:focus {
 
 .post-header-image {
     width: 100%;
+}
+
+.ascii-player {
+    margin: var(--spacing-4) 0;
 }

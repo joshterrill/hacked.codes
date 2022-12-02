@@ -1,14 +1,17 @@
 ---
-title: Hello World
+title: "Hello World"
 date: "2015-05-01T22:12:03.284Z"
-description: "Hello World"
+description: "This is my first post on my new fake blog! I'm sure I'll write a lot more interesting things in the future."
 tags: ["hello", "world"]
+image: "https://pbs.twimg.com/profile_banners/51837630/1425801658/1500x500"
 published: false
 ---
 
 This is my first post on my new fake blog! <span class="highlight yellow">How exciting!</span>
 
 I'm sure I'll write a lot more interesting things in the future.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 Oh, and here's <span class="highlight green">a great quote</span> from this Wikipedia on
 [salted duck eggs](https://en.wikipedia.org/wiki/Salted_duck_egg).
@@ -21,7 +24,7 @@ Oh, and here's <span class="highlight green">a great quote</span> from this Wiki
 > salted duck eggs have a briny aroma, a gelatin-like egg white and a
 > firm-textured, round yolk that is bright orange-red in color.
 
-![Chinese Salty Egg](./salty_egg.jpg)
+<div class="ascii-player" data-path="/test.cast"></div>
 
 You can also write code blocks here!
 
@@ -117,87 +120,20 @@ This is a paragraph.
     >
     >     Markdown.generate();
 
-- Red
-- Green
-- Blue
+* **Bullet** 1
+* *Bullet* 2
+* <span class="highlight green">Bullet 3</span>
+* Inline `// code can go here`
 
-* Red
-* Green
-* Blue
-
-- Red
-- Green
-- Blue
-
-```markdown
-- Red
-- Green
-- Blue
-
-* Red
-* Green
-* Blue
-
-- Red
-- Green
-- Blue
+```shell{promptUser: josh}{promptHost: hacked.codes}
+echo "Hello, world"
+ls
+cd ../..
 ```
 
-- `code goes` here in this line
-- **bold** goes here
+Seperator:
 
-```shell{promptUser: alice}{promptHost: dev.localhost}
-- `code goes` here in this line
-- **bold** goes here
-```
-
-1. Buy flour and salt
-1. Mix together with water
-1. Bake
-
-```markdown
-1. Buy flour and salt
-1. Mix together with water
-1. Bake
-```
-
-1. `code goes` here in this line
-1. **bold** goes here
-
-```markdown
-1. `code goes` here in this line
-1. **bold** goes here
-```
-
-Paragraph:
-
-    Code
-
-<!-- -->
-
-    Paragraph:
-
-        Code
-
----
-
----
-
----
-
----
-
----
-
-    * * *
-
-    ***
-
-    *****
-
-    - - -
-
-    ---------------------------------------
+---------------------------------------
 
 This is [an example](http://example.com "Example") link.
 
@@ -207,19 +143,7 @@ This is [an example][id] reference-style link.
 
 [id]: http://example.com "Optional Title"
 
-    This is [an example](http://example.com "Example") link.
-
-    [This link](http://example.com) has no title attr.
-
-    This is [an example] [id] reference-style link.
-
-    [id]: http://example.com "Optional Title"
-
-_single asterisks_
-
-_single underscores_
-
-**double asterisks**
+#### Opt-in
 
 <iframe
 scrolling="no"
@@ -234,12 +158,13 @@ src="https://buttondown.email/hacked.codes?as_embed=true"
 </p>
 </div>
 
-<div style='background-color:#EDF2F7; color:#1A2067; border-left: solid #718096 4px; border-radius: 4px;'>
-<p style='padding:0.7em; margin-left:0.7em; display: inline-block;'>
-<img src="https://via.placeholder.com/150" style="zoom:70%;  float:right; padding:0.7em"/>
-<b>isomorphism</b>  &rarr;  In mathematics, an isomorphism is a structure-preserving mapping between two structures of the same type that can be reversed by an inverse mapping.<br>
+<div style='background-color:#EDF2F7; color:#1A2067; border-left: solid #718096 4px; border-radius: 4px; margin-bottom: 10px;'>
+<p style='padding:0.7em; margin-left:0.7em; margin-bottom: 0; display: inline-block;'>
+<img src="https://via.placeholder.com/170" style="zoom:70%;  float:right; padding:0.7em"/>
+<b>isomorphism</b>  &rarr;  In mathematics, an isomorphism is a structure-preserving mapping between two structures of the same type that can be reversed by an inverse mapping. In mathematics, an isomorphism is a structure-preserving mapping between two structures of the same type that can be reversed by an inverse mapping.<br>
 </p>
 </div>
+
 <div class="resizeme" style="  resize: both;
   margin: 0;
   padding: 0;
@@ -264,32 +189,20 @@ src="https://buttondown.email/hacked.codes?as_embed=true"
         >█Resize This█</text>
       </svg>
 </div>
-**double underscores**
 
-    *single asterisks*
-
-    _single underscores_
-
-    **double asterisks**
-
-    __double underscores__
-
-This paragraph has some `code` in it.
-
-    This paragraph has some `code` in it.
 
 ![Alt Text](https://via.placeholder.com/200x50 "Image Title")
 
-    ![Alt Text](https://via.placeholder.com/200x50 "Image Title")
 
-
-Text with[^1] reference footnote[^1].
-Text with inline footnote[^2].
+Text with[^1] reference footnote[^2].
+Text with inline footnote[^3].
 
 ![Cat](http://placekitten.com/g/80/120)
-_This is a cat [^3]
+
+This is a cat[^4]
 
 
-[^1]: [This is the named reference](https://www.google.com)
-[^2]: This is a fig reference
+[^1]: [This is](https://www.google.com) the named reference
+[^2]: *This is a fig reference: https://www.google.com*
 [^3]: This is a fig reference
+[^4]: This is a fig reference
