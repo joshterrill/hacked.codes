@@ -10,7 +10,6 @@ const BlogPostTemplate = ({ data: { previous, next, site, markdownRemark: post }
     const siteTitle = site.siteMetadata?.title || `Title`;
     const image = post.frontmatter?.image || null;
     const tags = post.frontmatter?.tags || [];
-
     return (
         <Layout location={location} title={siteTitle}>
             <article className="blog-post" itemScope itemType="http://schema.org/Article">

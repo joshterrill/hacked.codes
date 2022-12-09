@@ -1,7 +1,6 @@
-<!-- AUTO-GENERATED-CONTENT:START (STARTER) -->
 <p align="center">
   <a href="https://hacked.codes">
-    <img alt="Hacked Codes" src="./src/images/logo.png"  />
+    <img alt="Hacked Codes" src="https://i.imgur.com/xn8zqJI.png"  />
   </a>
 </p>
 <p align="center">Articles on hacking, reverse engineering, and software development.</p>

@@ -1,7 +1,6 @@
 import * as React from "react";
 
-const Tags = (props) => {
-
+const Tags = props => {
     const renderTag = (tag, index, tagCount) => {
         return (
             <span key={`tag-${tag}`}>
@@ -10,18 +9,16 @@ const Tags = (props) => {
                 </a>
                 {index + 1 < tagCount ? ", " : ""}
             </span>
-            
         );
     };
 
     return (
         <section className="post-tags">
-            {props.tags.length > 0 && 
+            {props.tags.length > 0 && (
                 <div>Tags: {props.tags.map((tag, i) => renderTag(tag, i, props.tags.length))}</div>
-            }
+            )}
         </section>
-    )
-
-}
+    );
+};
 
 export default Tags;

@@ -2,3 +2,5 @@
 package.json
 package-lock.json
 public
+asciinema-player.css
+asciinema-player.min.js

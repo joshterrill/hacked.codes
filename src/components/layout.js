@@ -28,12 +28,12 @@ const Layout = ({ location, title, children }) => {
                 <div className="built-with">
                     © {new Date().getFullYear()}, Built with
                     {` `}
-                    <a href="https://www.gatsbyjs.com">Gatsby</a>    
+                    <a href="https://www.gatsbyjs.com">Gatsby</a>
                 </div>
                 <div className="contact-pgp">
-                    <a href="/contact.txt">Contact + PGP</a> // <a href="https://buttondown.email/hacked.codes">Newsletter</a>
+                    <a href="/contact.txt">Contact + PGP</a> //{" "}
+                    <a href="https://buttondown.email/hacked.codes">Newsletter</a>
                 </div>
-                
             </footer>
         </div>
     );

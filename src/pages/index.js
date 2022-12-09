@@ -64,7 +64,7 @@ const BlogIndex = ({ data, location }) => {
                                         itemProp="description"
                                     />
                                 </section>
-                                <Tags tags={tags}/>
+                                <Tags tags={tags} />
                             </article>
                         </li>
                     );

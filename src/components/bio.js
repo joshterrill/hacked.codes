@@ -54,12 +54,9 @@ const Bio = () => {
                 <a href={`https://github.com/${github}`} target="_blank" rel="noreferrer">
                     Github
                 </a>
+                .
                 <br />
-                Visit{" "}
-                <a href="https://joshterrill.com" target="_blank" rel="noreferrer">
-                    my personal site
-                </a>{" "}
-                to see some of my projects
+                Click <a href="/contact.txt">here</a> for contact info.
             </p>
         </div>
     );

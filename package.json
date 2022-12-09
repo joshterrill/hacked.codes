@@ -4,6 +4,9 @@
   "description": "Articles on hacking, reverse engineering, and software development.",
   "version": "0.1.0",
   "author": "Josh Terrill",
+  "engines": {
+    "node": ">= 18.0.0"
+  },
   "bugs": {
     "url": "https://github.com/joshterrill/hacked.codes/issues"
   },
