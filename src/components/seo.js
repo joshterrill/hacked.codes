@@ -64,7 +64,7 @@ const Seo = ({ description, title, image, children }) => {
                             rows: 20,
                         });
                     }
-                }, 100)}
+                }, 300)}
             </script>
             {children}
         </>

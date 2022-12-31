@@ -120,26 +120,30 @@ h6 {
     color: var(--color-heading);
 }
 
-h1 {
+header h1 {
     font-weight: var(--fontWeight-black);
     font-size: var(--fontSize-6);
     color: var(--color-heading-black);
 }
 
-h2 {
+h1 {
     font-size: var(--fontSize-5);
 }
 
-h3 {
+h2 {
     font-size: var(--fontSize-4);
 }
 
-h4 {
+h3 {
     font-size: var(--fontSize-3);
 }
 
-h5 {
+h4 {
     font-size: var(--fontSize-2);
+}
+
+h5 {
+    font-size: var(--fontSize-1);
 }
 
 h6 {
@@ -176,9 +180,10 @@ ol {
     margin-right: var(--spacing-0);
     padding: var(--spacing-0);
     margin-bottom: var(--spacing-6);
-    list-style-position: outside;
+    /* list-style-position: inside; */
     list-style-image: none;
 }
+
 
 ul li,
 ol li {
@@ -332,6 +337,14 @@ a:focus {
     font-family: var(--font-heading);
 }
 
+.blog-post div.gist div {
+    margin: initial !important;
+}
+
+.gist-data .file-box {
+    max-height: 800px;
+}
+
 .blog-post div {
     margin-bottom: var(--spacing-4);
 }
@@ -350,11 +363,6 @@ a:focus {
     blockquote {
         padding: var(--spacing-0) var(--spacing-0) var(--spacing-0) var(--spacing-4);
         margin-left: var(--spacing-0);
-    }
-
-    ul,
-    ol {
-        list-style-position: inside;
     }
 }
 
@@ -386,6 +394,11 @@ a:focus {
     /* 1 */
     min-width: 100%;
     /* 2 */
+    max-height: 800px;
+}
+
+.gatsby-highlight pre[class*="language-"], .gatsby-highlight code[class*="language-"] {
+    font-size: 14px !important;
 }
 
 /**
@@ -473,4 +486,42 @@ a:focus {
 
 .ascii-player {
     margin: var(--spacing-4) 0;
+}
+
+a code {
+    color: inherit !important;
+}
+
+.info-block {
+    background-color: #EDF2F7;
+    color: #1A2067;
+    border-left: solid #718096 4px;
+    border-radius: 4px;
+    margin-bottom: var(--spacing-6);
+    margin-top: var(--spacing-6);
+}
+
+.info-block p {
+    padding: 0.7em;
+    margin-left: 0.7em;
+    margin-bottom: 0;
+    display: inline-block;
+}
+
+.article-body img {
+    max-width: 100%;
+    margin-bottom: var(--spacing-4);
+}
+
+code, pre {
+    font-size: 1rem !important;
+}
+
+.ascii-player code, .ascii-player pre {
+    font-size: 1em !important;
+}
+
+.gatsby-resp-image-wrapper {
+    margin-top: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
 }

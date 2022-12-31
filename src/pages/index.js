@@ -86,6 +86,15 @@ export const pageQuery = graphql`
                 description
             }
         }
+        allFile(filter: { sourceInstanceName: { eq: "data" } }) {
+            edges {
+              node {
+                extension
+                dir
+                modifiedTime
+              }
+            }
+          }
         allMarkdownRemark(
             filter: { frontmatter: { published: { eq: true } } }
             sort: { fields: [frontmatter___date], order: DESC }
