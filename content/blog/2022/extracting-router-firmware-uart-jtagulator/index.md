@@ -1,12 +1,12 @@
 ﻿---
 title: Extracting router firmware via UART using the JTAGulator
 date: "2022-12-11T16:19:02.149Z"
-description: We'll be using simple hardware and software to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying the UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain root shell on the main filesystem, allowing us to extract the firmware from memory.
+description: We'll be using simple hardware and software to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying the UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
 tags: ["Hardware Hacking"]
 published: true
 ---
 
-We'll be using simple hardware and software to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying the UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain root shell on the main filesystem, allowing us to extract the firmware from memory.
+We'll be using simple hardware and software to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying the UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
 
 # What you'll need
 * A device to receive and transmit via UART (we'll be using [Joe Grand](http://www.grandideastudio.com/)'s [JTAGulator](http://www.grandideastudio.com/jtagulator/) because of its robustness, but an [Attify Badge](https://www.attify-store.com/products/attify-badge-uart-jtag-spi-i2c), [BUS Pirate](https://www.sparkfun.com/products/12942), or a [$15 USB to TTL Serial Cable](https://www.amazon.com/USB-to-TTL-Serial-Cable/dp/B00N2FPJ0Q) will do as well)
