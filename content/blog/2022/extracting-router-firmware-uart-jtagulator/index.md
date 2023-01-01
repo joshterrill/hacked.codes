@@ -9,7 +9,7 @@ published: true
 We'll be using simple hardware and software to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying the UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain root shell on the main filesystem, allowing us to extract the firmware from memory.
 
 # What you'll need
-* A device to receive and transmit via UART (we'll be using [Joe Grand](http://www.grandideastudio.com/)'s [JTAGulator](http://www.grandideastudio.com/jtagulator/) because of its robostness, but an [Attify Badge](https://www.attify-store.com/products/attify-badge-uart-jtag-spi-i2c), [BUS Pirate](https://www.sparkfun.com/products/12942), or a [$15 USB to TTL Serial Cable](https://www.amazon.com/USB-to-TTL-Serial-Cable/dp/B00N2FPJ0Q) will do as well)
+* A device to receive and transmit via UART (we'll be using [Joe Grand](http://www.grandideastudio.com/)'s [JTAGulator](http://www.grandideastudio.com/jtagulator/) because of its robustness, but an [Attify Badge](https://www.attify-store.com/products/attify-badge-uart-jtag-spi-i2c), [BUS Pirate](https://www.sparkfun.com/products/12942), or a [$15 USB to TTL Serial Cable](https://www.amazon.com/USB-to-TTL-Serial-Cable/dp/B00N2FPJ0Q) will do as well)
 * A router (in this example we'll be using the [GL.iNet GL-B1300 Home Router](https://www.amazon.com/gp/product/B079FJKZV8/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1))
 * Tools to open the router up (small screwdrivers, prying tool, etc.) The [iFixit Essential Electronics Toolkit](https://www.amazon.com/iFixit-Essential-Electronics-Toolkit-Smartphone/dp/B0964G2Y7S/) is great for this
 
@@ -30,7 +30,7 @@ UART, or universal asynchronous receiver-transmitter, is what we'll use to recei
     <a href="https://www.rohde-schwarz.com/us/products/test-and-measurement/oscilloscopes/educational-content/understanding-uart_254524.html">Source</a>
 </div>
 
-We see on the edge of the board three pins sticking up labeled convinently `GND`, `RX`, and `TX`. 
+We see on the edge of the board three pins sticking up labeled conveniently `GND`, `RX`, and `TX`. 
 ![Finding UART](./assets/finding-uart.jpg)
 
 # Connecting to UART
@@ -56,7 +56,7 @@ screen /dev/tty.usbserial-AB0P6L9O 115200
 
 <div class="info-block info">
     <p>
-    <b>Info</b>  &rarr; NOTE: if at any time during this process you get frozen inside screen, open another terminal and type <code>killall screen</code>, then enter the screen connect command again, press CTRL+X.<br>
+    <b>Info</b>  &rarr; NOTE: if at any time during this process you get frozen inside <code>screen</code>, open another terminal and type <code>killall screen</code>, then enter the screen connect command again, press CTRL+X.<br>
     </p>
 </div>
 
@@ -81,7 +81,7 @@ Because the UART pins and output voltage (3.3v displayed right under the UART pi
 
 # Poking around the Linux file system
 
-After letting the router completely boot up, we are given a shell, and the logged in user says `root`. Since this router runs on OpenWRT, it's not going to be locked down or encrypted, though, some routers (especially enterprise-ish ones) might have some security protection mechanisms in place that make it harder to get a root shell.
+After letting the router completely boot up, we are given a shell, and the logged in user says `root`. Since this router runs on OpenWRT, it's not going to be locked down or encrypted, though some routers (especially enterprise-ish ones) might have some security protection mechanisms in place that make it harder to get a root shell.
 
 As shown above, some good places to look to find what capabilities we have are:
 
@@ -142,7 +142,7 @@ I failed many times at copying the firmware to my host system, these failures ar
 
 ![Winbond flash chip](./assets/winbond-flash-chip.jpg)
 
-After looking up the [datasheet for this winbond 255Q256JVFQ](https://www.winbond.com/hq/support/documentation/levelOne.jsp?__locale=en&DocNo=DA00-W25Q256JV) I realizsed that this chip is a "3v 256MB Serial *Flash Memory*...". I researched how linux works with flash memory and found [this article on coresecurity.com](https://www.coresecurity.com/core-labs/articles/linux-flash-newbies-how-linux-works-flash) which describes getting a list of all MTD blocks (memory technology device, used for interacting with flash memory) that a system has:
+After looking up the [datasheet for this winbond 255Q256JVFQ](https://www.winbond.com/hq/support/documentation/levelOne.jsp?__locale=en&DocNo=DA00-W25Q256JV) I realized that this chip is a "3v 256MB Serial *Flash Memory*...". I researched how linux works with flash memory and found [this article on coresecurity.com](https://www.coresecurity.com/core-labs/articles/linux-flash-newbies-how-linux-works-flash) which describes getting a list of all MTD blocks (memory technology device, used for interacting with flash memory) that a system has:
 
 ```shell{promptUser: root}{promptHost: GL-B1300}
 cat /proc/mtd
@@ -164,11 +164,11 @@ We see that the largest block is `rootfs` at `/dev/mtd9`, this is most likely go
 
 If you have a router that has a USB port that mounts to `/mnt`, the easiest thing to do is to run something like: `cp -av /dev/mtd9 /mnt/sda/output.bin` for just the filesystem or `cp -r /dev/mtd* /mnt/sda/output.bin` for all blocks.
 
-Depending on how large the blocks are and how much memory the router has, it could a few minutes to copy.
+Depending on how large the blocks are and how much memory the router has, it could take a few minutes to copy.
 
 If your router doesn't have a USB port and you're able to get on the same network as the router, you can open a netcat listener on your host machine: `nc -l 1337 | dd of=./output.bin`, then type the following command into the router: `dd if=/dev/mtd9 | nc <internal host IP> 1337` - this will pipe the response of the `mtd9` file to our host computer listening on port `1337`. 
 
-On the router serial communicationput you should see:
+On the router serial communication output you should see:
 
 ```shell{promptUser: root}{promptHost: GL-B1300}
 dd if=/dev/mtd9 | nc 192.168.8.212 1337
@@ -198,7 +198,7 @@ Whether you used a USB drive, or extracted the firmware through `nc`, you should
     </p>
 </div>
 
-When using `binwalk` to extract firmware, epsecially for non-open-source routers, there's a chance that the firmware might be encrypted. We can check this by running `binwalk -E output.bin`, giving us an output that looks like this:
+When using `binwalk` to extract firmware, especially for non-open-source routers, there's a chance that the firmware might be encrypted. We can check this by running `binwalk -E output.bin`, giving us an output that looks like this:
 
 <div class="ascii-player" data-path="/asciinema/entropy.cast"></div>
 
@@ -311,7 +311,7 @@ For some reason pulling blocks of memory like this after a certain point always 
 
 ### Writing the contents of `/dev/mtd9` to stdout and writing stdout to a file using `picocom`
 
-Another possible method of extracting firmware is to pipe the firmware out to stdout via `cat` and saving the output to a file on our host. To do this, we can use [`picocom`](https://github.com/npat-efault/picocom).
+Another possible method of extracting firmware is to pipe the firmware out to stdout via `cat` and save the output to a file on our host. To do this, we can use [`picocom`](https://github.com/npat-efault/picocom).
 
 Kill the JTAGulator screen session by typing `killall screen` and connect to the JTAGulator using the following:
 
@@ -321,7 +321,7 @@ picocom --b 115200 --logfile output.bin /dev/tty.usbserial-AB0P6L9O
 
 You'll see the same JTAGulator prompt that we saw before, so you'll go through and set everything up for connecting to UART like before. Then type **BUT DON'T PRESS ENTER** `cat /dev/mtd9`
 
-Keeping the `picocom` window open, and the command typed in, open a finder window to the `output.bin` file being written to on your computer, you should see all the output from the serial connection, setting up JTAGUlator, etc. - clear out all of the contents so it becomes a blank file and save it. Go back to your `picocom` terminal and press ENTER. You'll see the raw data from `mtd9` streaming across the terminal, and you should see the `output.bin` file grow in size every second as more data is added to it. This is a slow process, taking ~15 minutes to copty ~30mb. This is what the whole process looks like:
+Keeping the `picocom` window open, and the command typed in, open a finder window to the `output.bin` file being written to on your computer, you should see all the output from the serial connection, setting up JTAGUlator, etc. - clear out all of the contents so it becomes a blank file and save it. Go back to your `picocom` terminal and press ENTER. You'll see the raw data from `mtd9` streaming across the terminal, and you should see the `output.bin` file grow in size every second as more data is added to it. This is a slow process, taking ~15 minutes to copy ~30mb. This is what the whole process looks like:
 
 <div class="ascii-player" data-path="/asciinema/failed-cat-extraction.cast"></div>
 
