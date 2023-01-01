@@ -31,7 +31,7 @@ const Bio = () => {
                 className="bio-avatar"
                 layout="fixed"
                 formats={["auto", "webp", "avif"]}
-                src="../images/profile-pic.jpeg"
+                src="../../static/images/profile-pic.jpeg"
                 width={60}
                 height={60}
                 quality={95}
@@ -43,8 +43,7 @@ const Bio = () => {
                     lineHeight: `1.6em`,
                 }}
             >
-                <strong>Josh Terrill</strong> - Software Developer at{" "}
-                <a href="https://axiallon.com">Axiallon</a>
+                <strong>Josh Terrill</strong> - Software Engineer
                 <br />
                 Follow me on{" "}
                 <a href={`https://twitter.com/${twitter}`} target="_blank" rel="noreferrer">

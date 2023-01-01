@@ -88,13 +88,13 @@ export const pageQuery = graphql`
         }
         allFile(filter: { sourceInstanceName: { eq: "data" } }) {
             edges {
-              node {
-                extension
-                dir
-                modifiedTime
-              }
+                node {
+                    extension
+                    dir
+                    modifiedTime
+                }
             }
-          }
+        }
         allMarkdownRemark(
             filter: { frontmatter: { published: { eq: true } } }
             sort: { fields: [frontmatter___date], order: DESC }

@@ -4,7 +4,7 @@ module.exports = {
         description: `Articles on hacking, reverse engineering, and software development.`,
         author: {
             name: `Josh Terrill`,
-            avatar: `/images/profile-pic.jpeg`,
+            avatar: `static/images/profile-pic.jpeg`,
         },
         siteUrl: `https://hacked.codes/`,
         social: {
@@ -22,13 +22,6 @@ module.exports = {
             },
         },
         {
-            resolve: `gatsby-source-filesystem`,
-            options: {
-                name: `images`,
-                path: `${__dirname}/src/images`,
-            },
-        },
-        {
             resolve: `gatsby-transformer-remark`,
             options: {
                 plugins: [
@@ -36,7 +29,7 @@ module.exports = {
                     {
                         resolve: `gatsby-remark-images`,
                         options: {
-                            maxWidth: 630,
+                            maxWidth: 800,
                         },
                     },
                     {
@@ -79,8 +72,26 @@ module.exports = {
                 ],
             },
         },
+        {
+            resolve: `gatsby-plugin-sharp`,
+            options: {
+                defaults: {
+                    quality: 90,
+                    // jpgOptions: {
+                    //     progressive: true,
+                    //     quality: 90,
+                    // },
+                    // pngOptions: {
+                    //     quality: 90,
+                    // },
+                    // webpOptions: {
+                    //     quality: 90,
+                    // },
+                },
+            },
+        },
         `gatsby-transformer-sharp`,
-        `gatsby-plugin-sharp`,
+
         {
             resolve: `gatsby-plugin-feed`,
             options: {
@@ -144,7 +155,7 @@ module.exports = {
                 background_color: `#ffffff`,
                 theme_color: `#1d1e26`,
                 display: `minimal-ui`,
-                icon: `src/images/favicon.png`,
+                icon: `static/images/favicon.png`,
             },
         },
     ],

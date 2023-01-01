@@ -67,6 +67,9 @@ export const Head = ({ data: { markdownRemark: post } }) => {
             title={post.frontmatter.title}
             description={post.frontmatter.description || post.excerpt}
             image={post.frontmatter.image}
+            publishedTime={post.frontmatter.date}
+            primaryTag={post.frontmatter?.tags?.length ? post.frontmatter.tags[0] : null}
+            isPost={true}
         />
     );
 };

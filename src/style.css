@@ -106,7 +106,7 @@ h5,
 h6 {
     font-family: var(--font-heading);
     margin-top: var(--spacing-6);
-    margin-bottom: var(--spacing-6);
+    margin-bottom: var(--spacing-4);
     line-height: var(--lineHeight-tight);
     letter-spacing: -0.025em;
 }
@@ -276,7 +276,7 @@ a:focus {
     margin: 0;
 }
 
-.post-list-item {
+:not(:first) .post-list-item {
     margin-bottom: var(--spacing-8);
     margin-top: var(--spacing-8);
 }
@@ -288,14 +288,13 @@ a:focus {
 .post-list-item h2 {
     font-size: var(--fontSize-4);
     color: var(--color-primary);
-    margin-bottom: var(--spacing-0);
+    margin-bottom: var(--spacing-1);
     margin-top: var(--spacing-0);
     text-decoration: underline;
-    /* font-family: 'Source Code Pro', monospace; */
 }
 
 .post-list-item header {
-    margin-bottom: var(--spacing-0);
+    margin-bottom: var(--spacing-1);
 }
 
 .post-date {
@@ -329,7 +328,7 @@ a:focus {
 }
 
 .blog-post header h1 {
-    margin: var(--spacing-4) var(--spacing-0) var(--spacing-2) var(--spacing-0);
+    margin: var(--spacing-3) var(--spacing-0) var(--spacing-3) var(--spacing-0);
 }
 
 .blog-post header p:not(.post-date) {
@@ -345,7 +344,7 @@ a:focus {
     max-height: 800px;
 }
 
-.blog-post div {
+.blog-post div:not(.ascii-player *) {
     margin-bottom: var(--spacing-4);
 }
 
@@ -385,7 +384,7 @@ a:focus {
    * 2. Always fill the visible space in .gatsby-highlight.
    * 3. Adjust the position of the line numbers
    */
-.gatsby-highlight pre[class*="language-"] {
+.gatsby-highlight :not(.language-shell) pre[class*="language-"] {
     background-color: transparent;
     margin: 0;
     padding: 0;
@@ -484,18 +483,15 @@ a:focus {
     width: 100%;
 }
 
-.ascii-player {
-    margin: var(--spacing-4) 0;
-}
+/* .ascii-player * {
+    margin: initial !important;
+} */
 
 a code {
     color: inherit !important;
 }
 
 .info-block {
-    background-color: #EDF2F7;
-    color: #1A2067;
-    border-left: solid #718096 4px;
     border-radius: 4px;
     margin-bottom: var(--spacing-6);
     margin-top: var(--spacing-6);
@@ -508,9 +504,25 @@ a code {
     display: inline-block;
 }
 
+.info-block.info {
+    background-color: #EDF2F7;
+    color: #1A2067;
+    border-left: solid #718096 4px;
+}
+
+.info-block.danger {
+    background-color: #f7eded;
+    color: #671a1a;
+    border-left: solid #967171 4px;
+}
+
 .article-body img {
-    max-width: 100%;
+    min-width: 100%;
     margin-bottom: var(--spacing-4);
+}
+
+h1 code, h1 pre {
+    font-size: inherit !important;
 }
 
 code, pre {
@@ -522,6 +534,14 @@ code, pre {
 }
 
 .gatsby-resp-image-wrapper {
-    margin-top: var(--spacing-4);
-    margin-bottom: var(--spacing-4);
+    margin-top: var(--spacing-4) !important;
+    margin-bottom: var(--spacing-4) !important;
+    max-width: 100% !important;
+}
+
+.source {
+    font-style: italic;
+    text-align: right;
+    margin-right: var(--spacing-3);
+    font-size: var(--fontSize-1);
 }

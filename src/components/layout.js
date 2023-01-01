@@ -31,7 +31,7 @@ const Layout = ({ location, title, children }) => {
                     <a href="https://www.gatsbyjs.com">Gatsby</a>
                 </div>
                 <div className="contact-pgp">
-                    <a href="/contact.txt">Contact + PGP</a> /{" "}
+                    <a href="/contact.txt">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
                     <a href="https://buttondown.email/hacked.codes">Newsletter</a>
                 </div>
             </footer>
