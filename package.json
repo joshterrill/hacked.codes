@@ -17,6 +17,7 @@
     "gatsby-plugin-mailchimp": "^5.2.2",
     "gatsby-plugin-manifest": "^4.24.0",
     "gatsby-plugin-sharp": "^4.24.0",
+    "gatsby-plugin-sitemap": "^5.25.0",
     "gatsby-remark-autolink-headers": "^5.25.0",
     "gatsby-remark-copy-linked-files": "^5.24.0",
     "gatsby-remark-embed-gist": "^1.2.1",

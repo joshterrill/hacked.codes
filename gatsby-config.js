@@ -22,6 +22,13 @@ module.exports = {
             },
         },
         {
+            resolve: `gatsby-plugin-sitemap`,
+            options: {
+                exclude: [`/404`, `/404.html`],
+                
+            },
+        },
+        {
             resolve: `gatsby-transformer-remark`,
             options: {
                 plugins: [
