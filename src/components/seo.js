@@ -50,14 +50,13 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
             <meta name="twitter:creator" content={`@${site.siteMetadata?.social?.twitter}`} />
             <meta name="twitter:title" content={displayTitle} />
             <meta name="twitter:description" content={metaDescription} />
-            {
-                isPost ?
-                    <>
-                        {/* is a post */}
-                        <meta name="article:published_time" content={publishedTime} />
-                        <meta name="article:section" content={primaryTag} />
-                        <script type="application/ld+json">
-                            {`{
+            {isPost ? (
+                <>
+                    {/* is a post */}
+                    <meta name="article:published_time" content={publishedTime} />
+                    <meta name="article:section" content={primaryTag} />
+                    <script type="application/ld+json">
+                        {`{
                                 "@context": "https://schema.org/",
                                 "@type": "NewsArticle",
                                 "headline": "${displayTitle}",
@@ -69,32 +68,29 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                                     "name": "Josh Terrill",
                                 }],
                             }`}
-                        </script>
+                    </script>
 
-                        <script src="/asciinema-player.min.js"></script>
-                        <link rel="stylesheet" type="text/css" href="/asciinema-player.css" />
-                        <script>
-                            {
-                                typeof document !== 'undefined' && 
-                                setTimeout(() => {
-                                        
-                                    const docs = document.querySelectorAll(".ascii-player");
-                                    for (const doc of docs) {
-                                        const path = doc.getAttribute("data-path");
-                                        window.AsciinemaPlayer.create(path, doc, {
-                                            terminalFontSize: "30px",
-                                            fit: "width",
-                                            poster: "npt:1:23",
-                                            idleTimeLimit: 2,
-                                            cols: 100,
-                                            rows: 20,
-                                        });
-                                    }
-                                }, 300)
-                            }
-                        </script>
-                    </>
-                :
+                    <script src="/asciinema-player.min.js"></script>
+                    <link rel="stylesheet" type="text/css" href="/asciinema-player.css" />
+                    <script>
+                        {typeof document !== "undefined" &&
+                            setTimeout(() => {
+                                const docs = document.querySelectorAll(".ascii-player");
+                                for (const doc of docs) {
+                                    const path = doc.getAttribute("data-path");
+                                    window.AsciinemaPlayer.create(path, doc, {
+                                        terminalFontSize: "30px",
+                                        fit: "width",
+                                        poster: "npt:1:23",
+                                        idleTimeLimit: 2,
+                                        cols: 100,
+                                        rows: 20,
+                                    });
+                                }
+                            }, 300)}
+                    </script>
+                </>
+            ) : (
                 <>
                     {/* not a post */}
                     <meta name="robots" content="index,follow" />
@@ -107,7 +103,7 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                         }`}
                     </script>
                 </>
-            }
+            )}
         </>
     );
 };

@@ -1,12 +1,12 @@
 ﻿---
 title: Extracting router firmware via UART using the JTAGulator
 date: "2022-12-11T16:19:02.149Z"
-description: We'll be using simple hardware and software to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying the UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
+description: Using simple hardware and software, this post will show you how to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
 tags: ["Hardware Hacking"]
 published: true
 ---
 
-We'll be using simple hardware and software to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying the UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
+Using simple hardware and software, this post will show you how to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
 
 # What you'll need
 * A device to receive and transmit via UART (we'll be using [Joe Grand](http://www.grandideastudio.com/)'s [JTAGulator](http://www.grandideastudio.com/jtagulator/) because of its robustness, but an [Attify Badge](https://www.attify-store.com/products/attify-badge-uart-jtag-spi-i2c), [BUS Pirate](https://www.sparkfun.com/products/12942), or a [$15 USB to TTL Serial Cable](https://www.amazon.com/USB-to-TTL-Serial-Cable/dp/B00N2FPJ0Q) will do as well)
@@ -208,7 +208,7 @@ And an image that looks like this:
 
 An encrypted firmware would have most, if not all, entropy around the `1.0` mark. This firmware has a lot of rising and falling entropy lines, meaning it's most likely not encrypted.
 
-Now we can run a binwalk extract by typing `binwalk -e output.bin` and see that we now have a directory with the extracted firmware, and the whole router filesystem inside a folder called `squashfs-root`:
+Now we can run a binwalk extract by typing `binwalk -e output.bin` and see that we now have a directory with the extracted firmware, and the whole router filesystem inside a directory called `squashfs-root`:
 
 <div class="ascii-player" data-path="/asciinema/binwalk-extract.cast"></div>
 
