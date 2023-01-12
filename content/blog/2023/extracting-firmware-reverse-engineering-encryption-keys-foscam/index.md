@@ -14,14 +14,14 @@ If you would like to download the files we'll be analyzing to follow along, you 
 
 FOSCAM posts the firmware for all of their devices online for public download. I'm using a QJ4 model, so I [downloaded the firmware](https://www.foscam.com/downloads/firmware_details.html?id=145) and ran some initial analysis on it.
 
-First, running a `file` command on the downloaded firmware .bin file gives us the following output:
+Running a `file` command on the downloaded firmware bin file gives us the following output:
 
 ```shell{promptUser: josh}{promptHost: laptop}
 file FosIPC_J_app_ver2.x.2.63.bin
 FosIPC_J_app_ver2.x.2.63.bin: openssl enc'd data with salted password
 ```
 
-Now we know the firmware is encrypted with openssl, using some sort of salted password. We should expect that we won't see any strings of value, running `binwalk` shouldn't give us anything.
+Now we know the firmware is encrypted with openssl, using some sort of salted password. We should expect that we won't see any strings of value and running `binwalk` shouldn't give us anything.
 
 ```shell{promptUser: josh}{promptHost: laptop}
 strings FosIPC_J_app_ver2.x.2.63.bin
@@ -49,6 +49,12 @@ DECIMAL       HEXADECIMAL     DESCRIPTION
 ```
 
 # Extracting firmware via SPI flash programmer
+
+<div class="info-block info">
+    <p>
+    <b>Update</b>  &rarr; I found out that FOSCAM offers recovery images if you send them an email to support[at]foscam[dot]com, tell them you're having trouble with your camrea and need a recovery image, they'll send you a link to an archive that contains a few files, one of which is the <code>FirmwareUpgrade</code> file for whatever model you have, which we end up reverse engineering encryption keys from in the next section. If you get this file from them, you can skip this section.<br>
+    </p>
+</div>
 
 Taking apart the camera reveals a few layers of boards that have a variety of different chips, the chip that we're looking for is going to be an SPI flash chip, in this case, a [*GigaDevice GD25Q64CSIG*](https://www.mouser.com/ProductDetail/GigaDevice/GD25Q64CSIG?qs=RcG8xmE7yp1fNNepEtzjlg%3D%3D) chip. 
 

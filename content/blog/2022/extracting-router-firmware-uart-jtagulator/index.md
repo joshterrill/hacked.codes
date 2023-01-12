@@ -188,17 +188,17 @@ nc -l 1337 | dd of=./output.bin
 
 If you wanted all of the blocks, you can copy one block at a time through `nc`, then on the host, run something like `cp -r ./mtd*.bin ./output.bin` to combine them into one file.
 
-# Using `binwalk` to extract the firmware
+# Using `binwalk` to extract the firmware contents
 
 Whether you used a USB drive, or extracted the firmware through `nc`, you should now have an `output.bin` file that has the raw firmware in it. We can use [`binwalk`](https://github.com/ReFirmLabs/binwalk/blob/master/INSTALL.md) to analyze the output.
 
 <div class="info-block info">
     <p>
-    <b>Note</b>  &rarr; There are some important dependencies that `binwalk` requires to be able to extract different filesystems - follow their <a href="https://github.com/ReFirmLabs/binwalk/wiki/Quick-Start-Guide">Quick Start Guide</a> for installation steps.<br>
+    <b>Note</b>  &rarr; There are some important dependencies that <code>binwalk</code> requires to be able to extract different filesystems - follow their <a href="https://github.com/ReFirmLabs/binwalk/wiki/Quick-Start-Guide">Quick Start Guide</a> for installation steps.<br>
     </p>
 </div>
 
-When using `binwalk` to extract firmware, especially for non-open-source routers, there's a chance that the firmware might be encrypted. We can check this by running `binwalk -E output.bin`, giving us an output that looks like this:
+When using `binwalk` to extract firmware contents, especially for non-open-source routers, there's a chance that the firmware might be encrypted. We can check this by running `binwalk -E output.bin`, giving us an output that looks like this:
 
 <div class="ascii-player" data-path="/asciinema/entropy.cast"></div>
 
@@ -206,9 +206,9 @@ And an image that looks like this:
 
 ![Firmware entropy output](./assets/entropy.png)
 
-An encrypted firmware would have most, if not all, entropy around the `1.0` mark. This firmware has a lot of rising and falling entropy lines, meaning it's most likely not encrypted.
+An encrypted firmware (or compressed firmware) would have most, if not all, entropy around the `1.0` mark. This firmware has a lot of rising and falling entropy lines, meaning it's most likely not encrypted.
 
-Now we can run a binwalk extract by typing `binwalk -e output.bin` and see that we now have a directory with the extracted firmware, and the whole router filesystem inside a directory called `squashfs-root`:
+Now we can run a binwalk extract by typing `binwalk -e output.bin` and see that we have a directory with the extracted contents, and the router's linux filesystem in a directory called `squashfs-root`:
 
 <div class="ascii-player" data-path="/asciinema/binwalk-extract.cast"></div>
 
@@ -218,7 +218,7 @@ Now we can run a binwalk extract by typing `binwalk -e output.bin` and see that 
     </p>
 </div>
 
-# Other methods of firmware extraction (and why they didn't work for me)
+# Other methods of firmware extraction (and why they **didn't** work for me)
 
 ### U-Boot mode's `md` command
 

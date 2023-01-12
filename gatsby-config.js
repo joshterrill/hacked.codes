@@ -83,16 +83,16 @@ module.exports = {
             resolve: `gatsby-plugin-sharp`,
             options: {
                 defaults: {
-                    quality: 90,
+                    quality: 100,
                     // jpgOptions: {
                     //     progressive: true,
-                    //     quality: 90,
+                    //     quality: 100,
                     // },
                     // pngOptions: {
-                    //     quality: 90,
+                    //     quality: 100,
                     // },
                     // webpOptions: {
-                    //     quality: 90,
+                    //     quality: 100,
                     // },
                 },
             },
