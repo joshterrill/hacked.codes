@@ -1,26 +1,25 @@
 ﻿---
 title: Extracting router firmware via UART using the JTAGulator
 date: "2022-12-11T16:19:02.149Z"
-description: Using simple hardware and software, this post will show you how to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
+description: Using simple hardware and software, this post will show you how to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying UART pins and connecting a JTAGulator will allow us to transmit and receive through the serial connection, access the U-Boot bootloader, and get a root shell on the main filesystem, allowing us to extract the firmware from memory.
 tags: ["Hardware Hacking"]
 published: true
 ---
 
-Using simple hardware and software, this post will show you how to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying UART pins and connecting a JTAGulator will allow us to read the serial communication, gain access to the U-Boot bootloader, and gain a root shell on the main filesystem, allowing us to extract the firmware from memory.
+Using simple hardware and software, this post will show you how to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying UART pins and connecting a JTAGulator will allow us to transmit and receive through the serial connection, access the U-Boot bootloader, and get a root shell on the main filesystem, allowing us to extract the firmware from memory.
 
 # What you'll need
 * A device to receive and transmit via UART (we'll be using [Joe Grand](http://www.grandideastudio.com/)'s [JTAGulator](http://www.grandideastudio.com/jtagulator/) because of its robustness, but an [Attify Badge](https://www.attify-store.com/products/attify-badge-uart-jtag-spi-i2c), [BUS Pirate](https://www.sparkfun.com/products/12942), or a [$15 USB to TTL Serial Cable](https://www.amazon.com/USB-to-TTL-Serial-Cable/dp/B00N2FPJ0Q) will do as well)
 * A router (in this example we'll be using the [GL.iNet GL-B1300 Home Router](https://www.amazon.com/gp/product/B079FJKZV8/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1))
-* Tools to open the router up (small screwdrivers, prying tool, etc.) The [iFixit Essential Electronics Toolkit](https://www.amazon.com/iFixit-Essential-Electronics-Toolkit-Smartphone/dp/B0964G2Y7S/) is great for this
 
 # Identifying UART pins on the board
-Accessing the main board on the router was fairly easy. Pulling off the rubber feet from the bottom-side of the router case exposes four small phillips-head screws. Once the screws were out, I had direct access to one side of the board as shown in this image:
+Accessing the main board on the router was fairly easy. Pulling off the rubber feet from the bottom of the router case exposes four small phillips-head screws. Once the screws were out, I had direct access to one side of the board as shown in this image:
 
 ![Router board access](./assets/router-board-access.jpg)
 
-We'll carefully pull the wifi antennas from the sides, unscrew the two screws that are securing the board to the other side of the casing, remove the shielding, then pull the board out of its case.
+Carefully pull the wifi antennas from the sides, unscrew the two screws that are securing the board to the other side of the casing, remove the shielding, and pull the board out of the case.
 
-UART, or universal asynchronous receiver-transmitter, is what we'll use to receive and transmit data to and from the router. Since UART on its own (one without a data bus) only has `RX`, `TX`, and some sort of power (usually labeled `GRND` or not labeled at all), it's typically pretty easy to find on a device like this, other devices might be more difficult.
+UART ([universal asynchronous receiver-transmitter](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver-transmitter)) is what we'll use to transmit and receive data to and from the router. Since UART on its own (one without a data bus) only has `RX`, `TX`, and some sort of power (usually labeled `GRND` or not labeled at all), it's *typically* pretty easy to find on a device like this - other devices might be more difficult.
 
 
 ![UART Diagram](./assets/uart-diagram.png)
@@ -30,12 +29,13 @@ UART, or universal asynchronous receiver-transmitter, is what we'll use to recei
     <a href="https://www.rohde-schwarz.com/us/products/test-and-measurement/oscilloscopes/educational-content/understanding-uart_254524.html">Source</a>
 </div>
 
-We see on the edge of the board three pins sticking up labeled conveniently `GND`, `RX`, and `TX`. 
+On the edge of the board three conveniently labeled pins are sticking up: `GND`, `RX`, and `TX`. 
+
 ![Finding UART](./assets/finding-uart.jpg)
 
 # Connecting to UART
 
-Every piece of hardware that can be used to connect to UART is going to be a little different with how it works, and though it's a little pricey, the JTAGulator is my favorite choice for debugging on-chip interfaces. As mentioned above, any device that supports TTL to USB (like the Attify Badge, BUS Pirate, etc.) should work just fine.
+Any piece of hardware that can be used to connect to UART is going to work slightly different, though it's a little pricey, the JTAGulator is my favorite choice for debugging on-chip interfaces. However, any device that supports TTL to USB (like the Attify Badge, BUS Pirate, etc.) should work just fine.
 
 **NOTE: If you're using a  JTAGulator, make sure that you [install the latest firmware](https://github.com/grandideastudio/jtagulator) before moving forward**
 
@@ -56,16 +56,15 @@ screen /dev/tty.usbserial-AB0P6L9O 115200
 
 <div class="info-block info">
     <p>
-    <b>Info</b>  &rarr; NOTE: if at any time during this process you get frozen inside <code>screen</code>, open another terminal and type <code>killall screen</code>, then enter the screen connect command again, press CTRL+X.<br>
+    <b>Info</b>  &rarr; If at any time during this process you get frozen inside <code>screen</code>, open another terminal and type <code>killall screen</code>, then enter the screen connect command again, press CTRL+X.<br>
     </p>
 </div>
-
 
 The JTAGulator has 3 `GRND`'s and 24-channels - we'll take 3 jumper cables and attach them to `GND`, `CH0`, and `CH1` as shown here:
 
 ![JTAG Channels](./assets/jtag-channels.jpg)
 
-And take the other ends of the jumper cables and add them to the marked channels on the router. The full assembly should look something like this:
+Then take the other end of the jumper cables and add them to the marked channels on the router. The full assembly should look something like this:
 
 ![Full assembly](./assets/full-assembly.jpg)
 
@@ -75,13 +74,13 @@ Because the UART pins and output voltage (3.3v displayed right under the UART pi
 
 <div class="info-block info">
     <p>
-    <b>Note</b>  &rarr; If the UART pins are not clearly labeled, the JTAGulator has a mode called <em><strong>Identify UART pinout</strong></em> which cycles through various configurations and baud to find the most likely setup for the device.<br>
+    <b>Info</b>  &rarr; If the UART pins are not clearly labeled, the JTAGulator has a mode called <em><strong>Identify UART pinout</strong></em> which cycles through various configurations and baud to find the most likely setup for the device.<br>
     </p>
 </div>
 
 # Poking around the Linux file system
 
-After letting the router completely boot up, we are given a shell, and the logged in user says `root`. Since this router runs on OpenWRT, it's not going to be locked down or encrypted, though some routers (especially enterprise-ish ones) might have some security protection mechanisms in place that make it harder to get a root shell.
+After letting the router completely boot up, we are given a root shell. Since this router runs on OpenWRT, it's not going to be locked down or encrypted, though some routers (especially enterprise-ish ones) might have some security mechanisms in place that make it harder to get a root shell.
 
 As shown above, some good places to look to find what capabilities we have are:
 
@@ -138,7 +137,7 @@ Binary file ./lib/modules/4.4.60/umac.ko matches
 
 # Copying the firmware to host system
 
-I failed many times at copying the firmware to my host system, these failures are outlined below in the [Other methods of firmware extraction and why they didn't work for me](#other-methods-of-firmware-extraction-and-why-they-didnt-work-for-me) section. So I started looking around the board for the memory chip.
+I failed many times when attempting to copy the firmware to my host system, these failures are outlined below in the [Other methods of firmware extraction and why they didn't work for me](#other-methods-of-firmware-extraction-and-why-they-didnt-work-for-me) section. So I started looking around the board for the memory chip.
 
 ![Winbond flash chip](./assets/winbond-flash-chip.jpg)
 
@@ -160,13 +159,13 @@ mtd9: 01a80000 00010000 "rootfs"
 mtd10: 00950000 00010000 "rootfs_data
 ```
 
-We see that the largest block is `rootfs` at `/dev/mtd9`, this is most likely going to be the filesystem. We can extract just that one file, or we can extract all of the files listed to perform further analysis.
+The largest block is `rootfs` at `/dev/mtd9`, this is most likely going to be the filesystem. We can extract just that one block, or we can extract all of the blocks listed to perform further analysis.
 
-If you have a router that has a USB port that mounts to `/mnt`, the easiest thing to do is to run something like: `cp -av /dev/mtd9 /mnt/sda/output.bin` for just the filesystem or `cp -r /dev/mtd* /mnt/sda/output.bin` for all blocks.
+If you have a router that has a USB port that mounts to `/mnt`, the easiest thing to do is to run something like: `cp -av /dev/mtd9 /mnt/sda/output.bin` for just the filesystem or `cp -r /dev/mtd* /mnt/sda/output.bin` for all blocks to copy to USB.
 
-Depending on how large the blocks are and how much memory the router has, it could take a few minutes to copy.
+Depending on how large the blocks are and how much memory the router has, this could take a few minutes.
 
-If your router doesn't have a USB port and you're able to get on the same network as the router, you can open a netcat listener on your host machine: `nc -l 1337 | dd of=./output.bin`, then type the following command into the router: `dd if=/dev/mtd9 | nc <internal host IP> 1337` - this will pipe the response of the `mtd9` file to our host computer listening on port `1337`. 
+If your router *doesn't* have a USB port, but you're able to get on the same network as the router, you can open a netcat listener on your host machine: `nc -l 1337 | dd of=./output.bin`, then type the following command into the router UART terminal: `dd if=/dev/mtd9 | nc <internal host IP> 1337` - this will pipe the response of the `mtd9` file to our host computer listening on port `1337`. 
 
 On the router serial communication output you should see:
 
@@ -190,15 +189,15 @@ If you wanted all of the blocks, you can copy one block at a time through `nc`, 
 
 # Using `binwalk` to extract the firmware contents
 
-Whether you used a USB drive, or extracted the firmware through `nc`, you should now have an `output.bin` file that has the raw firmware in it. We can use [`binwalk`](https://github.com/ReFirmLabs/binwalk/blob/master/INSTALL.md) to analyze the output.
+Now that we have an `output.bin` file that has the raw firmware in it, we can use [`binwalk`](https://github.com/ReFirmLabs/binwalk/blob/master/INSTALL.md) to analyze the firmware contents.
 
 <div class="info-block info">
     <p>
-    <b>Note</b>  &rarr; There are some important dependencies that <code>binwalk</code> requires to be able to extract different filesystems - follow their <a href="https://github.com/ReFirmLabs/binwalk/wiki/Quick-Start-Guide">Quick Start Guide</a> for installation steps.<br>
+    <b>Info</b>  &rarr; There are some important dependencies that <code>binwalk</code> requires to be able to extract different filesystems - follow their <a href="https://github.com/ReFirmLabs/binwalk/wiki/Quick-Start-Guide">Quick Start Guide</a> for installation steps.<br>
     </p>
 </div>
 
-When using `binwalk` to extract firmware contents, especially for non-open-source routers, there's a chance that the firmware might be encrypted. We can check this by running `binwalk -E output.bin`, giving us an output that looks like this:
+When using `binwalk` to extract firmware contents, especially for non-open-source routers, there's a chance that the firmware might be encrypted or compressed (compression can be taken care of by `binwalk`, encryption can't). We can check this by running `binwalk -E output.bin`, giving us an output that looks like this:
 
 <div class="ascii-player" data-path="/asciinema/entropy.cast"></div>
 
@@ -206,7 +205,7 @@ And an image that looks like this:
 
 ![Firmware entropy output](./assets/entropy.png)
 
-An encrypted firmware (or compressed firmware) would have most, if not all, entropy around the `1.0` mark. This firmware has a lot of rising and falling entropy lines, meaning it's most likely not encrypted.
+An encrypted or compressed firmware would have most, if not all, entropy around the `1.0` mark. This firmware has a lot of rising and falling entropy lines, meaning it's most likely not encrypted or compressed.
 
 Now we can run a binwalk extract by typing `binwalk -e output.bin` and see that we have a directory with the extracted contents, and the router's linux filesystem in a directory called `squashfs-root`:
 

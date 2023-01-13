@@ -60,7 +60,7 @@ Taking apart the camera reveals a few layers of boards that have a variety of di
 
 <img src="./assets/gigadevice-flash-chip.jpg" />
 
-Looking at the datasheet was see the following layout:
+Looking at the datasheet we see the following layout:
 
 <img src="./assets/flash-chip-diagram.png" />
 
