@@ -1,5 +1,5 @@
 ---
-title: Extracting firmware and reverse engineering encryption keys for FOSCAM cameras using Ghidra
+title: Reverse engineering FOSCAM encryption keys from extracted firmware using Ghidra
 date: "2023-01-12T19:04:13.121Z"
 description: FOSCAM firmware is encrypted with openssl using a salted key. This post will demonstrate how to extract the firmware using an $14 SPI flash programmer, and reverse engineer the decryption keys for the firmware, and RSA keys that ship with the firmware using Ghidra.
 tags: ["Reverse Engineering", "Hardware Hacking"]
