@@ -2,7 +2,7 @@
 title: Extracting router firmware via UART using the JTAGulator
 date: "2022-12-11T16:19:02.149Z"
 description: Using simple hardware and software, this post will show you how to extract and analyze the firmware of a GL.iNet GL-B1300 router. Identifying UART pins and connecting a JTAGulator will allow us to transmit and receive through the serial connection, access the U-Boot bootloader, and get a root shell on the main filesystem, allowing us to extract the firmware from memory.
-tags: ["Hardware Hacking"]
+tags: ["hardware-hacking"]
 published: true
 ---
 
