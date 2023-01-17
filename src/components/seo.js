@@ -60,7 +60,7 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                                 "@context": "https://schema.org/",
                                 "@type": "NewsArticle",
                                 "headline": "${displayTitle}",
-                                "description": "${description}"
+                                "description": "${description}",
                                 "image": ["${metaImage}"],
                                 "datePublished": "${publishedTime}",
                                 "author": [{
