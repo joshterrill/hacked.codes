@@ -65,8 +65,8 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                                 "datePublished": "${publishedTime}",
                                 "author": [{
                                     "@type": "Person",
-                                    "name": "Josh Terrill",
-                                }],
+                                    "name": "Josh Terrill"
+                                }]
                             }`}
                     </script>
 
@@ -99,7 +99,7 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                             "@context": "https://schema.org/",
                             "@type": "CollectionPage",
                             "headline": "${defaultTitle}",
-                            "description": "${metaDescription} written by Josh Terrill",
+                            "description": "${metaDescription} Written by Josh Terrill"
                         }`}
                     </script>
                 </>
