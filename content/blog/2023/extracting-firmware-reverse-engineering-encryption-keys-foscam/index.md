@@ -129,7 +129,7 @@ Now we can load `libcommonLib.so` into Ghidra, perform basic analysis, and do a 
 
 <img src="./assets/reformstring-assembly.png" />
 
-And the decompiler has this:
+And the decompiler gives this code:
 
 ```c
 /* ReformString(char*, char const*, unsigned int, ...) */
@@ -167,7 +167,7 @@ def ReformString(charset, length, *args):
     return ''.join(str(x) for x in buff)
 ```
 
-We can now call the python function with the decompiled code we found back in the `FirmwareUpgrade` file:
+Now we can call the python function with the parameters from the decompiled code we found in the `FirmwareUpgrade` file:
 
 ```python
 result = ReformString(

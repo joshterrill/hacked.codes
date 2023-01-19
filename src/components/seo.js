@@ -34,6 +34,18 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
     return (
         <>
             <title>{displayTitle}</title>
+            <script async src="https://www.googletagmanager.com/gtag/js?id=G-SM9F2HGDV4"></script>
+            <script>
+                {
+                    `
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+
+                    gtag('config', 'G-SM9F2HGDV4');
+                    `
+                }
+            </script>
             <meta name="description" content={metaDescription} />
             <meta property="og:site_name" content="hacked.codes" />
             <meta property="og:type" content={isPost ? "article" : "website"} />
