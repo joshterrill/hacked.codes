@@ -546,6 +546,10 @@ code, pre {
     font-size: var(--fontSize-1);
 }
 
+h2 code {
+    font-size: inherit !important;
+}
+
 .skull {
     text-shadow: 0.06rem 0 0.06rem #ea36af, -0.125rem 0 0.06rem #75fa69;
     /* letter-spacing: 0.36em; */
