@@ -545,3 +545,28 @@ code, pre {
     margin-right: var(--spacing-3);
     font-size: var(--fontSize-1);
 }
+
+.skull {
+    text-shadow: 0.06rem 0 0.06rem #ea36af, -0.125rem 0 0.06rem #75fa69;
+    /* letter-spacing: 0.36em; */
+    animation-duration: 0.01s;
+    animation-name: textflicker;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    padding: 0;
+    bottom: 6px;
+    position: relative;
+    font-size: 48px;
+    margin-left: 5px;
+    margin-right: 14px;
+}
+
+@keyframes textflicker {
+    from {
+        text-shadow: 1px 0 0 #ea36af, -2px 0 0 #75fa69;
+    }
+
+    to {
+        text-shadow: 2px 0.5px 2px #ea36af, -1px -0.5px 2px #75fa69;
+    }
+}

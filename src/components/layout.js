@@ -6,10 +6,16 @@ const Layout = ({ location, title, children }) => {
     const isRootPath = location.pathname === rootPath;
     let header;
 
+    const updateHeading = () => {
+        document.querySelector('.main-heading span').innerHTML = 'hacked.c<span class="skull">☠</span>des';
+    }
+
     if (isRootPath) {
         header = (
             <h1 className="main-heading">
-                <Link to="/">{title}</Link>
+                <Link to="/">
+                    {title}
+                </Link>
             </h1>
         );
     } else {
@@ -32,7 +38,7 @@ const Layout = ({ location, title, children }) => {
                 </div>
                 <div className="contact-pgp">
                     <a href="/contact.txt">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                    <a href="https://buttondown.email/hacked.codes">Newsletter</a>
+                    <a href="/rss.xml">RSS</a>
                 </div>
             </footer>
         </div>
