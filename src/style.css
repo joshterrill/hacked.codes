@@ -574,3 +574,12 @@ h2 code {
         text-shadow: 2px 0.5px 2px #ea36af, -1px -0.5px 2px #75fa69;
     }
 }
+
+:not(pre)>code[class*=language-], pre[class*=language-] {
+    background: #3d3d3d !important;
+}
+
+code[class*=language-], pre[class*=language-] {
+    color: #f7f7f7 !important;
+    text-shadow: none !important;
+}
