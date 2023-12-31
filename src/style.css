@@ -582,4 +582,5 @@ h2 code {
 code[class*=language-], pre[class*=language-] {
     color: #f7f7f7 !important;
     text-shadow: none !important;
+    font-family: 'Source Code Pro' !important;
 }
