@@ -3,7 +3,7 @@ title: Exposing Chinese communications in Allen Bradley Factory Talk Echo PLC So
 date: "2023-05-16T21:51:02.314Z"
 description: TBD
 tags: ["reverse-engineering", "ics"]
-published: true
+published: false
 ---
 
 Text from dad: 4/26/2023
