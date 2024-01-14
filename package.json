@@ -2,7 +2,7 @@
   "name": "hacked.codes",
   "private": true,
   "description": "Articles on hacking, reverse engineering, and software development.",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "author": "Josh Terrill",
   "engines": {
     "node": ">= 18.0.0"

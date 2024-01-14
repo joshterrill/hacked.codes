@@ -83,6 +83,7 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                     </script>
 
                     <script src="/asciinema-player.min.js"></script>
+                    <link rel="stylesheet" type="text/css" href="https://github.githubassets.com/assets/gist-embed-c77408be8058.css" />
                     <link rel="stylesheet" type="text/css" href="/asciinema-player.css" />
                     <script>
                         {typeof document !== "undefined" &&
