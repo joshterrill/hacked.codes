@@ -584,3 +584,8 @@ code[class*=language-], pre[class*=language-] {
     text-shadow: none !important;
     font-family: 'Source Code Pro' !important;
 }
+
+a code.language-text {
+    color: #4abfff !important;
+    text-decoration: underline !important;
+}
