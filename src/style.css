@@ -589,3 +589,8 @@ a code.language-text {
     color: #4abfff !important;
     text-decoration: underline !important;
 }
+
+.token.operator {
+    background: none !important;
+    color: inherit !important; 
+}
