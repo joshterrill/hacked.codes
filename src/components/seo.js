@@ -117,6 +117,7 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                     </script>
                 </>
             )}
+            <script async defer src="/hello-there.js"></script>
         </>
     );
 };
