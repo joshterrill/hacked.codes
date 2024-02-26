@@ -115,7 +115,6 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                             "description": "${metaDescription} Written by Josh Terrill"
                         }`}
                     </script>
-                    <script async src="/hello-there.js"></script>
                 </>
             )}
         </>
