@@ -146,7 +146,7 @@ module.exports = {
               }
             `,
                         output: "/rss.xml",
-                        title: "hacked.codes RSS Feed",
+                        title: "hacked.codes",
                     },
                 ],
             },
