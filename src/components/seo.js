@@ -34,6 +34,8 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
     return (
         <>
             <title>{displayTitle}</title>
+            <link rel="preconnect" href="https://www.googletagmanager.com" />
+            <link rel="preconnect" href="https://www.google-analytics.com" />
             <script async src="https://www.googletagmanager.com/gtag/js?id=G-SM9F2HGDV4"></script>
             <script>
                 {
