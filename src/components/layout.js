@@ -6,10 +6,6 @@ const Layout = ({ location, title, children }) => {
     const isRootPath = location.pathname === rootPath;
     let header;
 
-    const updateHeading = () => {
-        document.querySelector('.main-heading span').innerHTML = 'hacked.c<span class="skull">☠</span>des';
-    }
-
     if (isRootPath) {
         header = (
             <h1 className="main-heading">

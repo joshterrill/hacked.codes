@@ -78,7 +78,6 @@ export default BlogIndex;
 
 export const Head = () => <>
     <Seo title="Home" />
-    <script async defer src="/hello-there.js"></script>
 </>;
 
 export const pageQuery = graphql`
