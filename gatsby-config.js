@@ -24,8 +24,7 @@ module.exports = {
         {
             resolve: `gatsby-plugin-sitemap`,
             options: {
-                exclude: [`/404`, `/404.html`],
-                
+                excludes: [`/404`, `/404.html`],
             },
         },
         {
@@ -56,7 +55,10 @@ module.exports = {
                         options: {
                             classPrefix: "language-",
                             inlineCodeMarker: null,
-                            aliases: {},
+                            aliases: {
+                                sh: "bash",
+                                zsh: "bash",
+                            },
                             showLineNumbers: false,
                             noInlineHighlight: false,
                             prompt: {
@@ -65,18 +67,6 @@ module.exports = {
                                 global: false,
                             },
                             escapeEntities: {},
-                        },
-                    },
-                    {
-                        resolve: `gatsby-remark-footnotes`,
-                        options: {
-                            footnoteBackRefPreviousElementDisplay: "inline",
-                            footnoteBackRefDisplay: "inline",
-                            footnoteBackRefInnerText: "^",
-                            footnoteBackRefAnchorStyle: `text-decoration: none;`,
-                            footnoteBackRefInnerTextStartPosition: "front",
-                            useFootnoteMarkerText: false,
-                            useCustomDivider: "<hr/><strong>References:</strong>",
                         },
                     },
                     `gatsby-remark-copy-linked-files`,

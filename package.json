@@ -10,6 +10,12 @@
   "bugs": {
     "url": "https://github.com/joshterrill/hacked.codes/issues"
   },
+  "overrides": {
+    "webpack": "^5.105.0",
+    "cookie": "^1.0.0",
+    "tmp": "^0.2.5",
+    "query-string": "^7.1.3"
+  },
   "dependencies": {
     "@deckdeckgo/highlight-code": "^3.6.0",
     "gatsby": "^4.24.0",
@@ -23,11 +29,9 @@
     "gatsby-remark-autolink-headers": "^5.25.0",
     "gatsby-remark-copy-linked-files": "^5.24.0",
     "gatsby-remark-embed-gist": "^1.2.1",
-    "gatsby-remark-footnotes": "^0.0.8",
     "gatsby-remark-highlight-code": "^3.3.0",
     "gatsby-remark-images": "^6.24.0",
     "gatsby-remark-prismjs": "^6.24.0",
-    "gatsby-remark-relative-source": "^0.0.5",
     "gatsby-remark-responsive-iframe": "^5.24.0",
     "gatsby-remark-smartypants": "^5.24.0",
     "gatsby-source-filesystem": "^4.24.0",

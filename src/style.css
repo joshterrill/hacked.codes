@@ -345,7 +345,7 @@ a:focus {
     max-height: 800px;
 }
 
-.blog-post div:not(.ascii-player *) {
+.blog-post div:not(.ascii-player *):not(.gatsby-highlight *) {
     margin-bottom: var(--spacing-4);
 }
 
@@ -366,87 +366,319 @@ a:focus {
     }
 }
 
-/**
- * Add back the container background-color, border-radius, padding, margin
- * and overflow that we removed from <pre>.
- */
-.gatsby-highlight {
-    background-color: #fdf6e3;
-    border-radius: 0.3em;
-    margin: 0.5em 0;
-    padding: 1em;
-    overflow: auto;
-}
-
-/**
-   * Remove the default PrismJS theme background-color, border-radius, margin,
-   * padding and overflow.
-   * 1. Make the element just wide enough to fit its content.
-   * 2. Always fill the visible space in .gatsby-highlight.
-   * 3. Adjust the position of the line numbers
-   */
-.gatsby-highlight :not(.language-shell) pre[class*="language-"] {
-    background-color: transparent;
-    margin: 0;
-    padding: 0;
-    overflow: initial;
-    float: left;
-    /* 1 */
-    min-width: 100%;
-    /* 2 */
-    max-height: 800px;
-}
-
-.gatsby-highlight pre[class*="language-"], .gatsby-highlight code[class*="language-"] {
-    font-size: 14px !important;
-}
-
-/**
- * If you already use line highlighting
- */
-
-/* Adjust the position of the line numbers */
-.gatsby-highlight pre[class*="language-"].line-numbers {
-    padding-left: 2.8em;
-}
-
-/**
-   * If you only want to use line numbering
-   */
+/* ==========================================================================
+   ENHANCED CODE BLOCKS - 8-bit Hacker Style
+   ========================================================================== */
 
 .gatsby-highlight {
-    background-color: #f3f3f3;
-    border-radius: 0.3em;
-    margin: 0.5em 0;
-    padding: 1em;
-    overflow: auto;
-}
-
-.gatsby-highlight pre[class*="language-"].line-numbers {
+    background: transparent;
     padding: 0;
-    padding-left: 2.8em;
-    overflow: initial;
+    margin: 1.5rem 0;
+    overflow: visible;
+    border-radius: 0;
 }
 
-.command-line-prompt>span:before {
-    color: #999;
-    content: " ";
-    display: block;
-    padding-right: 0.8em;
+.gatsby-highlight.enhanced {
+    background: transparent;
 }
 
-/* Prompt for all users */
-.command-line-prompt>span[data-user]:before {
-    content: "[" attr(data-user) "@" attr(data-host) "] $";
+/* --------------------------------------------------------------------------
+   Terminal Block (bash/shell)
+   -------------------------------------------------------------------------- */
+
+.terminal-block {
+    border-radius: 0;
+    background: #0d0d0d;
+    border: 2px solid #333;
+    overflow: hidden;
 }
 
-/* Prompt for root */
-.command-line-prompt>span[data-user="root"]:before {
-    content: "[" attr(data-user) "@" attr(data-host) "] #";
+.terminal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: #1a1a1a;
+    border-bottom: 2px solid #333;
 }
 
-.command-line-prompt>span[data-prompt]:before {
-    content: attr(data-prompt);
+.terminal-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.terminal-btn {
+    width: 10px;
+    height: 10px;
+    border-radius: 0;
+}
+
+.terminal-btn.red {
+    background: #ff5f56;
+    border: 1px solid #e0443e;
+}
+
+.terminal-btn.yellow {
+    background: #ffbd2e;
+    border: 1px solid #dea123;
+}
+
+.terminal-btn.green {
+    background: #27c93f;
+    border: 1px solid #1aab29;
+}
+
+.terminal-title {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    color: #666;
+}
+
+.terminal-content {
+    padding: 12px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.terminal-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.terminal-line:last-child {
+    margin-bottom: 0;
+}
+
+.terminal-line.command {
+    padding-right: 30px;
+}
+
+.terminal-line.command:hover .terminal-copy-btn {
+    opacity: 1;
+}
+
+.terminal-prompt {
+    color: #00ff00;
+    font-weight: 700;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.terminal-command {
+    color: #f7f7f7;
+    word-break: break-all;
+    flex: 1;
+}
+
+.terminal-line.output {
+    padding-left: 20px;
+    border-left: 2px solid #333;
+    margin-left: 4px;
+}
+
+.terminal-output {
+    color: #888;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.terminal-copy-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: transparent;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: #666;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.terminal-copy-btn:hover {
+    color: #00ff00;
+}
+
+.terminal-copy-btn.copied {
+    color: #00ff00;
+}
+
+/* --------------------------------------------------------------------------
+   Code Block (other languages)
+   -------------------------------------------------------------------------- */
+
+.code-block {
+    border-radius: 0;
+    background: #3D3D45;
+    border: 2px solid #555;
+    overflow: hidden;
+}
+
+.code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: #2d2d35;
+    border-bottom: 2px solid #555;
+}
+
+.code-language {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.code-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 0;
+    background: #666;
+}
+
+.code-language span {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.code-copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 2px 6px;
+    cursor: pointer;
+    color: #888;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    transition: color 0.15s;
+    border-radius: 0;
+}
+
+.code-copy-btn:hover {
+    color: #f7f7f7;
+}
+
+.code-copy-btn.copied {
+    color: #00ff00;
+}
+
+.code-copy-btn span {
+    font-family: inherit;
+}
+
+.code-content {
+    padding: 12px;
+    overflow-x: auto;
+}
+
+.code-content pre {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible;
+}
+
+.code-content code {
+    font-family: 'Source Code Pro', monospace !important;
+    font-size: 13px !important;
+    line-height: 1.6;
+    color: #f7f7f7 !important;
+    background: transparent !important;
+}
+
+/* PrismJS token colors for dark code blocks */
+.code-content .token.comment,
+.code-content .token.prolog,
+.code-content .token.doctype,
+.code-content .token.cdata {
+    color: #6a9955;
+}
+
+.code-content .token.punctuation {
+    color: #d4d4d4;
+}
+
+.code-content .token.property,
+.code-content .token.tag,
+.code-content .token.boolean,
+.code-content .token.number,
+.code-content .token.constant,
+.code-content .token.symbol,
+.code-content .token.deleted {
+    color: #b5cea8;
+}
+
+.code-content .token.selector,
+.code-content .token.attr-name,
+.code-content .token.string,
+.code-content .token.char,
+.code-content .token.builtin,
+.code-content .token.inserted {
+    color: #ce9178;
+}
+
+.code-content .token.operator,
+.code-content .token.entity,
+.code-content .token.url,
+.code-content .language-css .token.string,
+.code-content .style .token.string {
+    color: #d4d4d4;
+}
+
+.code-content .token.atrule,
+.code-content .token.attr-value,
+.code-content .token.keyword {
+    color: #569cd6;
+}
+
+.code-content .token.function,
+.code-content .token.class-name {
+    color: #dcdcaa;
+}
+
+.code-content .token.regex,
+.code-content .token.important,
+.code-content .token.variable {
+    color: #d16969;
+}
+
+/* --------------------------------------------------------------------------
+   Hide original PrismJS command-line styling
+   -------------------------------------------------------------------------- */
+
+.gatsby-highlight.enhanced .command-line-prompt {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Inline code styling
+   -------------------------------------------------------------------------- */
+
+:not(pre) > code {
+    background: #3D3D45 !important;
+    color: #f7f7f7 !important;
+    padding: 0.15em 0.4em;
+    border-radius: 0;
+    font-size: 0.9em;
+    font-family: 'Source Code Pro', monospace;
 }
 
 .content-footer-spacer {
@@ -576,22 +808,26 @@ h2 code {
     }
 }
 
-:not(pre)>code[class*=language-], pre[class*=language-] {
-    background: #3d3d3d !important;
-}
-
-code[class*=language-], pre[class*=language-] {
-    color: #f7f7f7 !important;
-    text-shadow: none !important;
-    font-family: 'Source Code Pro' !important;
-}
-
-a code.language-text {
-    color: #4abfff !important;
-    text-decoration: underline !important;
-}
-
 .token.operator {
     background: none !important;
-    color: inherit !important; 
+}
+
+code[class*="language-"], pre[class*="language-"] {
+    text-shadow: none !important;
+}
+
+:not(pre) > code[class*="language-"] {
+    padding: .1em;
+    border-radius: 0px !important;
+    white-space: normal;
+    background: #1a1a1a !important;
+    font-family: 'Source Code Pro', monospace !important;
+    color: #f7f7f7 !important;
+}
+
+
+a code.language-text {
+    /* color: #4abfff !important; */
+    color: #b7ffbd !important;
+    /* text-decoration: underline !important; */
 }
