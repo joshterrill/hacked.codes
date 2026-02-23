@@ -1,32 +1,44 @@
-// normalize CSS across browsers
 import "./src/normalize.css";
-// custom CSS styles
 import "./src/style.css";
 
-// Highlighting for code blocks - base prism (we override most styles)
 import "prismjs/themes/prism.css";
 import "prismjs/plugins/line-numbers/prism-line-numbers.css";
 import "prismjs/plugins/command-line/prism-command-line.css";
 
-// Code block enhancement script
 export const onRouteUpdate = () => {
     if (typeof window === 'undefined') return;
     
-    // Wait for DOM to be ready
     setTimeout(() => {
         enhanceCodeBlocks();
+        enableInlineCodeSelection();
     }, 100);
 };
+
+function enableInlineCodeSelection() {
+    const inlineCodes = document.querySelectorAll(':not(pre) > code');
+    
+    inlineCodes.forEach(code => {
+        if (code.dataset.selectionEnabled) return;
+        code.dataset.selectionEnabled = 'true';
+        
+        code.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            const range = document.createRange();
+            range.selectNodeContents(code);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        });
+    });
+}
 
 function enhanceCodeBlocks() {
     const highlights = document.querySelectorAll('.gatsby-highlight');
     const highlightArray = Array.from(highlights);
     
-    // First pass: mark command/output pairs and merge them
     for (let i = 0; i < highlightArray.length; i++) {
         const highlight = highlightArray[i];
         
-        // Skip if already enhanced
         if (highlight.classList.contains('enhanced')) continue;
         
         const pre = highlight.querySelector('pre');
@@ -36,7 +48,7 @@ function enhanceCodeBlocks() {
         const language = getLanguage(pre, highlight);
         const blockType = getBlockType(language);
         
-        // Check if this is a "bash command" block followed by "bash output" block
+        // check for ```bash command followed by ```bash output
         if (blockType.type === 'command') {
             const nextHighlight = highlightArray[i + 1];
             if (nextHighlight) {
@@ -60,34 +72,30 @@ function enhanceCodeBlocks() {
                 }
             }
             
-            // Command block without following output - treat as single command terminal
             highlight.classList.add('enhanced');
             enhanceTerminalBlock(highlight, pre, code, 'bash', true);
             continue;
         }
         
-        // Skip standalone output blocks (shouldn't happen, but just in case)
         if (blockType.type === 'output') {
             highlight.classList.add('enhanced');
             enhanceTerminalBlock(highlight, pre, code, 'bash', false);
             continue;
         }
         
-        // Regular bash/shell block - each line is a command
         if (isTerminalLanguage(blockType.baseLang)) {
             highlight.classList.add('enhanced');
             enhanceTerminalBlock(highlight, pre, code, blockType.baseLang, true);
             continue;
         }
-        
-        // Non-terminal code block
+
+        // normal non-terminal code block
         highlight.classList.add('enhanced');
         enhanceCodeBlock(highlight, pre, code, blockType.baseLang);
     }
 }
 
 function getLanguage(pre, highlight) {
-    // Try to get language from data attribute or class
     const dataLang = highlight.getAttribute('data-language');
     if (dataLang) return dataLang;
     
@@ -98,8 +106,6 @@ function getLanguage(pre, highlight) {
 function getBlockType(language) {
     const lang = language.toLowerCase();
     
-    // Check for combined formats like "bashcommand" or "bashoutput" 
-    // (markdown "bash command" becomes "bashcommand")
     if (lang.endsWith('command') || lang.endsWith('cmd')) {
         const baseLang = lang.replace(/command$|cmd$/, '') || 'bash';
         return { baseLang, type: 'command' };
@@ -109,7 +115,6 @@ function getBlockType(language) {
         return { baseLang, type: 'output' };
     }
     
-    // Check for space/hyphen separated formats like "bash-command"
     const parts = lang.split(/[\s-]+/);
     if (parts.length > 1) {
         const baseLang = parts[0];
@@ -130,11 +135,9 @@ function isTerminalLanguage(lang) {
 }
 
 function enhanceTerminalBlockWithOutput(highlight, pre, commandCode, outputCode) {
-    // Create wrapper structure
     const wrapper = document.createElement('div');
     wrapper.className = 'terminal-block';
     
-    // Create header
     const header = document.createElement('div');
     header.className = 'terminal-header';
     header.innerHTML = `
@@ -146,11 +149,9 @@ function enhanceTerminalBlockWithOutput(highlight, pre, commandCode, outputCode)
         <span class="terminal-title">Terminal — Bash</span>
     `;
     
-    // Create content area
     const content = document.createElement('div');
     content.className = 'terminal-content';
     
-    // Add command lines
     const commandText = commandCode.textContent || commandCode.innerText;
     const commandLines = commandText.split('\n').filter(line => line.trim().length > 0);
     
@@ -171,12 +172,10 @@ function enhanceTerminalBlockWithOutput(highlight, pre, commandCode, outputCode)
         content.appendChild(lineDiv);
     });
     
-    // Add output lines
     if (outputCode) {
         const outputText = outputCode.textContent || outputCode.innerText;
         const outputLines = outputText.split('\n');
         
-        // Create output container
         const outputDiv = document.createElement('div');
         outputDiv.className = 'terminal-line output';
         outputDiv.innerHTML = `<span class="terminal-output">${escapeHtml(outputText)}</span>`;
@@ -186,17 +185,14 @@ function enhanceTerminalBlockWithOutput(highlight, pre, commandCode, outputCode)
     wrapper.appendChild(header);
     wrapper.appendChild(content);
     
-    // Replace original content
     highlight.innerHTML = '';
     highlight.appendChild(wrapper);
 }
 
 function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) {
-    // Create wrapper structure
     const wrapper = document.createElement('div');
     wrapper.className = 'terminal-block';
     
-    // Create header
     const header = document.createElement('div');
     header.className = 'terminal-header';
     header.innerHTML = `
@@ -208,7 +204,6 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
         <span class="terminal-title">Terminal — Bash</span>
     `;
     
-    // Create content area
     const content = document.createElement('div');
     content.className = 'terminal-content';
     
@@ -216,7 +211,6 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
     const lines = codeText.split('\n').filter(line => line.trim().length > 0);
     
     if (isCommand) {
-        // Each line is a copyable command
         lines.forEach(line => {
             const lineDiv = document.createElement('div');
             lineDiv.className = 'terminal-line command';
@@ -234,7 +228,6 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
             content.appendChild(lineDiv);
         });
     } else {
-        // All lines are output (no prompt, no copy)
         const outputDiv = document.createElement('div');
         outputDiv.className = 'terminal-line output';
         outputDiv.innerHTML = `<span class="terminal-output">${escapeHtml(codeText)}</span>`;
@@ -244,7 +237,6 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
     wrapper.appendChild(header);
     wrapper.appendChild(content);
     
-    // Replace original content
     highlight.innerHTML = '';
     highlight.appendChild(wrapper);
 }
@@ -253,7 +245,6 @@ function enhanceCodeBlock(highlight, pre, code, language) {
     const wrapper = document.createElement('div');
     wrapper.className = 'code-block';
     
-    // Create header
     const header = document.createElement('div');
     header.className = 'code-header';
     
@@ -272,7 +263,6 @@ function enhanceCodeBlock(highlight, pre, code, language) {
     header.appendChild(langLabel);
     header.appendChild(copyBtn);
     
-    // Create content area - preserve PrismJS highlighting
     const content = document.createElement('div');
     content.className = 'code-content';
     content.appendChild(pre.cloneNode(true));
@@ -280,7 +270,6 @@ function enhanceCodeBlock(highlight, pre, code, language) {
     wrapper.appendChild(header);
     wrapper.appendChild(content);
     
-    // Replace original content
     highlight.innerHTML = '';
     highlight.appendChild(wrapper);
 }

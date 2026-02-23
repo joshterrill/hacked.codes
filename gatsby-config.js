@@ -8,7 +8,7 @@ module.exports = {
         },
         siteUrl: `https://hacked.codes/`,
         social: {
-            twitter: `joshterrill`,
+            x: `joshterrill`,
             github: `joshterrill`,
         },
     },

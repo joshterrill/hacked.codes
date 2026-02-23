@@ -9,7 +9,7 @@ import * as React from "react";
 import PropTypes from "prop-types";
 import { useStaticQuery, graphql } from "gatsby";
 
-const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) => {
+const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag }) => {
     const { site } = useStaticQuery(
         graphql`
             query {
@@ -18,7 +18,7 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
                         title
                         description
                         social {
-                            twitter
+                            x
                         }
                     }
                 }
@@ -122,10 +122,6 @@ const Seo = ({ description, title, image, isPost, publishedTime, primaryTag }) =
             )}
         </>
     );
-};
-
-Seo.defaultProps = {
-    description: ``,
 };
 
 Seo.propTypes = {

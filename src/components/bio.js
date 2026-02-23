@@ -15,7 +15,7 @@ const Bio = () => {
             site {
                 siteMetadata {
                     social {
-                        twitter
+                        x
                         github
                     }
                 }
@@ -23,7 +23,7 @@ const Bio = () => {
         }
     `);
 
-    const { twitter, github } = data.site.siteMetadata?.social;
+    const { x, github } = data.site.siteMetadata?.social;
 
     return (
         <div className="bio">
@@ -46,8 +46,8 @@ const Bio = () => {
                 <strong>Josh Terrill</strong> - Software Engineer
                 <br />
                 Follow me on{" "}
-                <a href={`https://twitter.com/${twitter}`} target="_blank" rel="noreferrer">
-                    Twitter
+                <a href={`https://x.com/${x}`} target="_blank" rel="noreferrer">
+                    X
                 </a>{" "}
                 and{" "}
                 <a href={`https://github.com/${github}`} target="_blank" rel="noreferrer">
