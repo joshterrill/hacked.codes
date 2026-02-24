@@ -174,7 +174,6 @@ function enhanceTerminalBlockWithOutput(highlight, pre, commandCode, outputCode)
     
     if (outputCode) {
         const outputText = outputCode.textContent || outputCode.innerText;
-        const outputLines = outputText.split('\n');
         
         const outputDiv = document.createElement('div');
         outputDiv.className = 'terminal-line output';

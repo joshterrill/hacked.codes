@@ -190,6 +190,7 @@ ul li,
 ol li {
     padding-left: var(--spacing-0);
     margin-bottom: calc(var(--spacing-6) / 2);
+    list-style-position: inside;
 }
 
 li>p {
@@ -472,7 +473,7 @@ a:focus {
 }
 
 .terminal-command {
-    color: #f7f7f7;
+    color: #fff;
     word-break: break-all;
     flex: 1;
 }
@@ -520,8 +521,8 @@ a:focus {
 
 .code-block {
     border-radius: 0;
-    background: #3D3D45;
-    border: 2px solid #555;
+    background: #0d0d0d;
+    border: 2px solid #333;
     overflow: hidden;
 }
 
@@ -530,8 +531,8 @@ a:focus {
     align-items: center;
     justify-content: space-between;
     padding: 6px 10px;
-    background: #2d2d35;
-    border-bottom: 2px solid #555;
+    background: #1a1a1a;
+    border-bottom: 2px solid #333;
 }
 
 .code-language {
@@ -673,7 +674,7 @@ a:focus {
    -------------------------------------------------------------------------- */
 
 :not(pre) > code {
-    background: #3D3D45 !important;
+    background: #1a1a1a !important;
     color: #f7f7f7 !important;
     padding: 0.15em 0.4em;
     border-radius: 0;
@@ -824,6 +825,7 @@ code[class*="language-"], pre[class*="language-"] {
     background: #1a1a1a !important;
     font-family: 'Source Code Pro', monospace !important;
     color: #f7f7f7 !important;
+    word-wrap: break-word;
 }
 
 

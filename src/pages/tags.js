@@ -32,8 +32,8 @@ const TagsPage = ({
     </Layout>
 );
 
-export const Head = () => {
-    return <Seo title="All Tags" />;
+export const Head = ({ location }) => {
+    return <Seo title="All Tags" description="Browse all tags on hacked.codes" pathname={location.pathname} />;
 };
 
 TagsPage.propTypes = {

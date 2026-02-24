@@ -35,8 +35,12 @@ const Tags = ({ pageContext, data, location }) => {
     );
 };
 
-export const Head = ({ pageContext }) => {
-    return <Seo title={`Posts tagged with '${pageContext.tag}'`} />;
+export const Head = ({ pageContext, location }) => {
+    return <Seo 
+        title={`Posts tagged with '${pageContext.tag}'`} 
+        description={`All posts tagged with '${pageContext.tag}' on hacked.codes`}
+        pathname={location.pathname} 
+    />;
 };
 
 Tags.propTypes = {

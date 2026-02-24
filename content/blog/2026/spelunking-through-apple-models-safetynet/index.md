@@ -14,7 +14,7 @@ TODO: mention how these were done in a time when the shape and net files were ju
 
 Apple already has a couple of public API's that use some of these models, looking through their documentation I found [`VNClassifyImageRequest`](https://developer.apple.com/documentation/vision/vnclassifyimagerequest), [`VNGenerateImageFeaturePrintRequest`](https://developer.apple.com/documentation/vision/vngenerateimagefeatureprintrequest) and [`SCSensitivityAnalyzer`](https://developer.apple.com/documentation/sensitivecontentanalysis/scsensitivityanalyzer) 
 
-TODO
+TODO: explain how we can use parts of these in order to confirm/verify our own script's outputs
 
 # Analysis of `CoreSceneUnderstanding.framework` networks
 
@@ -75,7 +75,7 @@ Next I tried to run the same `espresso2onnx` script on the `SafetyNetLight_v1.1.
 
 ```bash command
 xxd /System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/Resources/scenenet_v5_custom_classifiers/SafetyNetLight/SafetyNetLight_v1.1.0/SafetyNetLight_v1.1.0_vx6zphgfsp_15880_safetynet_quant.espresso.net | head -n 5
-````
+```
 ```bash output
 00000000: 7062 7a65 0000 0000 4000 0000 0000 0000  pbze....@.......
 00000010: 0000 1c0b 0000 0000 0000 0524 6276 7832  ...........$bvx2
@@ -301,9 +301,7 @@ cat scenenet_sydro_model_default_config.json | jq
 }
 ```
 
-The full pipeline looks something like this:
-
-TODO: find a better transition for this
+Drawing it out as a diagram, we have:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -331,22 +329,25 @@ TODO: find a better transition for this
 
 # Parsing the weights
 
-We observed in the net files the following fields related to the weights:
+We observed in the net files the following fields related to the weights across multiple layers, here's an example from the first convolution layer:
 
 ```json
 "quantization_lut_weights_blob" : 3,
 "quantization_ranges_blob" : 5,
 ```
 
-This tells us that the weights are stored in quantized format, with lookup tables (LUT) for dequantization. According to [Apple's documentation on quantization](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-overview.html), this is a way to reduce the model size and improve inference speed by using lower precision (e.g., 8-bit integers) instead of full precision (e.g., 32-bit floats). The LUTs are used to map the quantized values back to their original floating-point values during inference.
+This tells us that the weights are stored in quantized format, with lookup tables (LUT) for dequantization. According to [Apple's documentation on quantization](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-overview.html), this is a way to reduce the model size and improve inference speed by using lower precision (e.g., 8-bit integers) instead of full precision (e.g., 32-bit floats). The LUTs are used to map the quantized values back to their original floating-point values during inference, therefore:
+
+1. **Weights blob (id=3):** Contains uint8 indices (1 byte per weight)
+2. **Ranges blob (id=5):** Contains float32 range values for dequantization
 
 To parse the weights, we need to:
 
-TODO:
+TODO: need to talk about full methedology we used in order to find the right way to parse weights, including apple documentation
 
 # Converting to ONNX and running inference
 
-Since my original `espresso2onnx` script was built for the older JSON format, I had to modify it to handle the new pbze compressed format. Once I added that functionality, I saw that there were a couple of new layer types that I haven't come across before. After adding code to handle these, I was finally able to run: `python3 espresso2onnx.py /tmp/safetynet_model/ -o safetynet_model.onnx`
+Since my original `espresso2onnx` script was built for the older JSON format for the net and shape files, I had to modify it to handle the new pbze compressed format. Once I added that functionality, I saw that there were a couple of new layer types that I haven't come across before, so I added support for those as well. Eventually, I was finally able to run: `python3 espresso2onnx.py /tmp/safetynet_model/ -o safetynet_model.onnx`
 
 Then I can do the same for the SceneNetv5 model: `python3 espresso2onnx.py /tmp/scenenet_model/ -o scenenet_model.onnx`
 
@@ -390,4 +391,4 @@ for head in JunkLeaf EventsLeaf JunkHierarchical CityNature SemanticDevelopment;
 done
 ```
 
-TODO: finish
+TODO: show finished working script, combining all head models into one, and scripting a python script to run the inference that shows classification output for each head + safety features. write a script that uses the apple api's to confirm we get the same outputs for a single image

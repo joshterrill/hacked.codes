@@ -9,7 +9,9 @@ import * as React from "react";
 import PropTypes from "prop-types";
 import { useStaticQuery, graphql } from "gatsby";
 
-const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag }) => {
+const escapeJsonLd = (str) => str?.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ') || '';
+
+const Seo = ({ description = '', title, image, isPost, publishedTime, publishedTimeISO, primaryTag, tags, pathname = '' }) => {
     const { site } = useStaticQuery(
         graphql`
             query {
@@ -17,6 +19,7 @@ const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag
                     siteMetadata {
                         title
                         description
+                        siteUrl
                         social {
                             x
                         }
@@ -26,14 +29,22 @@ const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag
         `
     );
 
+    const siteUrl = site.siteMetadata.siteUrl;
     const metaDescription = description || site.siteMetadata.description;
     const defaultTitle = site.siteMetadata?.title;
     const displayTitle = title ? `${title} | ${defaultTitle}` : defaultTitle;
-    const metaImage = image ? image : "/images/favicon.png";
-    const metaUrl = typeof window !== "undefined" ? window.location.href : "";
+    const metaUrl = `${siteUrl}${pathname}`;
+    
+    const absoluteImage = image
+        ? (image.startsWith('http') ? image : `${siteUrl}${image}`)
+        : `${siteUrl}/images/favicon.png`;
+
+    const twitterHandle = site.siteMetadata?.social?.x;
+
     return (
         <>
             <title>{displayTitle}</title>
+            <link rel="canonical" href={metaUrl} />
             <link rel="preconnect" href="https://www.googletagmanager.com" />
             <link rel="preconnect" href="https://www.google-analytics.com" />
             <script async src="https://www.googletagmanager.com/gtag/js?id=G-SM9F2HGDV4"></script>
@@ -50,9 +61,12 @@ const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag
             </script>
             <meta name="description" content={metaDescription} />
             <meta property="og:site_name" content="hacked.codes" />
+            <meta property="og:locale" content="en_US" />
             <meta property="og:type" content={isPost ? "article" : "website"} />
             <meta property="og:url" content={metaUrl} />
-            <meta property="og:image" content={metaImage} />
+            <meta property="og:image" content={absoluteImage} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
             <meta property="og:title" content={displayTitle} />
             <meta property="og:description" content={metaDescription} />
             {image ? (
@@ -60,28 +74,44 @@ const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag
             ) : (
                 <meta name="twitter:card" content="summary" />
             )}
-            <meta name="twitter:image" content={metaImage} />
-            <meta name="twitter:creator" content={`@${site.siteMetadata?.social?.twitter}`} />
+            <meta name="twitter:image" content={absoluteImage} />
+            <meta name="twitter:site" content={`@${twitterHandle}`} />
+            <meta name="twitter:creator" content={`@${twitterHandle}`} />
             <meta name="twitter:title" content={displayTitle} />
             <meta name="twitter:description" content={metaDescription} />
             {isPost ? (
                 <>
-                    {/* is a post */}
-                    <meta name="article:published_time" content={publishedTime} />
-                    <meta name="article:section" content={primaryTag} />
+                    <meta property="article:published_time" content={publishedTimeISO || publishedTime} />
+                    <meta property="article:section" content={primaryTag} />
+                    {tags?.map(tag => (
+                        <meta key={tag} property="article:tag" content={tag} />
+                    ))}
                     <script type="application/ld+json">
                         {`{
-                                "@context": "https://schema.org/",
-                                "@type": "NewsArticle",
-                                "headline": "${displayTitle}",
-                                "description": "${description}",
-                                "image": ["${metaImage}"],
-                                "datePublished": "${publishedTime}",
-                                "author": [{
-                                    "@type": "Person",
-                                    "name": "Josh Terrill"
-                                }]
-                            }`}
+                            "@context": "https://schema.org/",
+                            "@type": "NewsArticle",
+                            "headline": "${escapeJsonLd(displayTitle)}",
+                            "description": "${escapeJsonLd(description)}",
+                            "image": ["${absoluteImage}"],
+                            "datePublished": "${publishedTimeISO || publishedTime}",
+                            "url": "${metaUrl}",
+                            "mainEntityOfPage": {
+                                "@type": "WebPage",
+                                "@id": "${metaUrl}"
+                            },
+                            "author": [{
+                                "@type": "Person",
+                                "name": "Josh Terrill"
+                            }],
+                            "publisher": {
+                                "@type": "Organization",
+                                "name": "hacked.codes",
+                                "logo": {
+                                    "@type": "ImageObject",
+                                    "url": "${siteUrl}/images/favicon.png"
+                                }
+                            }
+                        }`}
                     </script>
 
                     <script src="/asciinema-player.min.js"></script>
@@ -107,14 +137,22 @@ const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag
                 </>
             ) : (
                 <>
-                    {/* not a post */}
                     <meta name="robots" content="index,follow" />
                     <script type="application/ld+json">
                         {`{
                             "@context": "https://schema.org/",
                             "@type": "CollectionPage",
-                            "headline": "${defaultTitle}",
-                            "description": "${metaDescription} Written by Josh Terrill"
+                            "headline": "${escapeJsonLd(defaultTitle)}",
+                            "description": "${escapeJsonLd(metaDescription)}",
+                            "url": "${metaUrl}",
+                            "publisher": {
+                                "@type": "Organization",
+                                "name": "hacked.codes",
+                                "logo": {
+                                    "@type": "ImageObject",
+                                    "url": "${siteUrl}/images/favicon.png"
+                                }
+                            }
                         }`}
                     </script>
                     <script async defer src="/hello-there.js"></script>
@@ -126,11 +164,14 @@ const Seo = ({ description = '', title, image, isPost, publishedTime, primaryTag
 
 Seo.propTypes = {
     title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
+    description: PropTypes.string,
     image: PropTypes.string,
     isPost: PropTypes.bool,
     publishedTime: PropTypes.string,
+    publishedTimeISO: PropTypes.string,
     primaryTag: PropTypes.string,
+    tags: PropTypes.arrayOf(PropTypes.string),
+    pathname: PropTypes.string,
 };
 
 export default Seo;

@@ -61,14 +61,17 @@ const BlogPostTemplate = ({ data: { previous, next, site, markdownRemark: post }
     );
 };
 
-export const Head = ({ data: { markdownRemark: post } }) => {
+export const Head = ({ data: { markdownRemark: post }, location }) => {
     return (
         <Seo
             title={post.frontmatter.title}
             description={post.frontmatter.description || post.excerpt}
             image={post.frontmatter.image}
             publishedTime={post.frontmatter.date}
+            publishedTimeISO={post.frontmatter.dateISO}
             primaryTag={post.frontmatter?.tags?.length ? post.frontmatter.tags[0] : null}
+            tags={post.frontmatter?.tags}
+            pathname={location.pathname}
             isPost={true}
         />
     );
@@ -90,6 +93,7 @@ export const pageQuery = graphql`
             frontmatter {
                 title
                 date(formatString: "MMMM DD, YYYY")
+                dateISO: date
                 description
                 tags
                 image

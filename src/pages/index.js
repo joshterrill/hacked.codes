@@ -76,8 +76,8 @@ const BlogIndex = ({ data, location }) => {
 
 export default BlogIndex;
 
-export const Head = () => <>
-    <Seo title="Home" />
+export const Head = ({ location }) => <>
+    <Seo title="Home" pathname={location.pathname} />
 </>;
 
 export const pageQuery = graphql`
