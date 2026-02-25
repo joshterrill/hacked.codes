@@ -550,10 +550,4 @@ if __name__ == "__main__":
         print(f"  {label}: {score:.4f}")
 ```
 
-Here are the results from a number of different image types:
-
-```
-Image: "beach.jpg"
-```
-
 The next blog post will be a deep dive into Apple's SummarizationKit models, which are also found in `CoreSceneUnderstanding.framework`.

@@ -394,7 +394,7 @@ a:focus {
 
 .terminal-block {
     border-radius: 0;
-    background: #0d0d0d;
+    background: #2b2b2b;
     border: 2px solid #333;
     overflow: hidden;
 }
@@ -404,7 +404,7 @@ a:focus {
     align-items: center;
     justify-content: space-between;
     padding: 6px 10px;
-    background: #1a1a1a;
+    background: #191919;
     border-bottom: 2px solid #333;
 }
 
@@ -563,7 +563,7 @@ a:focus {
 
 .code-block {
     border-radius: 0;
-    background: #0d0d0d;
+    background: #2b2b2b;
     border: 2px solid #333;
     overflow: hidden;
 }
@@ -573,7 +573,7 @@ a:focus {
     align-items: center;
     justify-content: space-between;
     padding: 6px 10px;
-    background: #1a1a1a;
+    background: #191919;
     border-bottom: 2px solid #333;
 }
 
@@ -864,7 +864,7 @@ code[class*="language-"], pre[class*="language-"] {
     padding: 0 0.1rem !important;
     border-radius: 0px !important;
     white-space: normal;
-    background: #1a1a1a !important;
+    background: #4a4a4a !important;
     font-family: 'Source Code Pro', monospace !important;
     color: #f7f7f7 !important;
     word-wrap: break-word;
