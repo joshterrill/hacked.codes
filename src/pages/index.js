@@ -99,7 +99,7 @@ export const pageQuery = graphql`
         }
         allMarkdownRemark(
             filter: { frontmatter: { published: { eq: true } } }
-            sort: { frontmatter: { date: DESC } }
+            sort: { fields: [frontmatter___date], order: DESC }
         ) {
             nodes {
                 excerpt
