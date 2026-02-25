@@ -28,7 +28,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
                     }
                 }
                 tagsGroup: allMarkdownRemark(limit: 2000) {
-                    group(field: { frontmatter: { tags: SELECT } }) {
+                    group(field: frontmatter___tags) {
                         fieldValue
                     }
                 }
