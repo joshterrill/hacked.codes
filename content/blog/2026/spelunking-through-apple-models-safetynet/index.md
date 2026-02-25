@@ -10,11 +10,11 @@ published: true
 
 While doing some research [reverse engineering Apple's NeuralHash](https://github.com/joshterrill/python-neuralhash) model, I came across a treasure trove of other espresso models on Apple devices. You can find them by running `find /System/Library/ -name "*espresso*"`. After creating [espresso2onnx](https://github.com/joshterrill/espresso2onnx), a python script that I used in the NeuralHash project to convert espresso models to a more usable ONNX format, I tried to see what other models I could convert and analyze.
 
-TODO: mention how these were done in a time when the shape and net files were just JSON files with a different extension, and how the new format is a bit more difficult to work with.
+In my [previous work on NeuralHash](https://github.com/joshterrill/python-neuralhash), the `.espresso.net` and `.espresso.shape` files were plain JSON and could be called with `json.load()`. Those older models (NeuralHash, pet classifier, sound classifier, various CoreNLP models) all used this straightforward format. But these newer models in `CoreSceneUnderstanding.framework` use a different format entirely - a proprietary `pbze` container with LZFSE compression. More on that later.
 
 Apple already has a couple of public API's that use some of these models, looking through their documentation I found [`VNClassifyImageRequest`](https://developer.apple.com/documentation/vision/vnclassifyimagerequest), [`VNGenerateImageFeaturePrintRequest`](https://developer.apple.com/documentation/vision/vngenerateimagefeatureprintrequest) and [`SCSensitivityAnalyzer`](https://developer.apple.com/documentation/sensitivecontentanalysis/scsensitivityanalyzer) 
 
-TODO: explain how we can use parts of these in order to confirm/verify our own script's outputs
+`VNGenerateImageFeaturePrintRequest` is particularly interesting because it gives us access to the same 768-dimensional "sceneprint" embedding that SafetyNetLight consumes. By extracting the sceneprint via the public Vision API and comparing it against our ONNX model's output, we can verify that our converted model is producing correct results. Similarly, `VNClassifyImageRequest` uses the same SceneNet backbone internally for its 1,374 scene categories, giving us another verification point.
 
 # Analysis of `CoreSceneUnderstanding.framework` networks
 
@@ -341,9 +341,47 @@ This tells us that the weights are stored in quantized format, with lookup table
 1. **Weights blob (id=3):** Contains uint8 indices (1 byte per weight)
 2. **Ranges blob (id=5):** Contains float32 range values for dequantization
 
-To parse the weights, we need to:
+I didn't know how to concvert the uint8 indices back to float32 weights, so I had to do some experimentation to figure out the correct dequantization formula. I found some documentation on specific [Apple algorithms](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html) but didn't find any specific information on how the LUT quantization works, so I had to reverse engineer it myself. I tried a few different formulas based on common quantization schemes, but only one of them produced results that made sense given the range values in the ranges blob. Here are the different formulas I tried these different methods and ended up discovering the correct one which matches the [same way TensorFlowLite does quantization](https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec).
 
-TODO: need to talk about full methedology we used in order to find the right way to parse weights, including apple documentation
+To verify, I looked at the final classifier layer (512 -> 10), which had only 20 range values for 10 output channels:
+
+```python
+fc_ranges = np.frombuffer(blobs[33], dtype=np.float32)  # 20 values
+fc_mins = fc_ranges[:10]  # First half
+fc_maxs = fc_ranges[10:]  # Second half
+
+# Output showed clearly symmetric pairs:
+# Channel 0: min=-0.150, max=+0.149
+# Channel 1: min=-0.269, max=+0.267
+# Channel 4: min=-1.276, max=+1.266
+```
+
+This confirmed the split layout. The final dequantization formula is:
+
+```python
+def dequantize_lut_weights(indices_blob, ranges_blob, out_channels, in_channels, kh=1, kw=1):
+    """
+    Apple's LUT quantization format:
+      - indices_blob: uint8 array (1 byte per weight, values 0-255)
+      - ranges_blob: float32 array, split as [all_mins | all_maxes]
+      
+    Dequantization: weight = min + (index / 255) * (max - min)
+    """
+    num_weights = out_channels * in_channels * kh * kw
+    indices = np.frombuffer(indices_blob[:num_weights], dtype=np.uint8)
+    ranges = np.frombuffer(ranges_blob, dtype=np.float32)
+    
+    # Split layout
+    mins = ranges[:out_channels]
+    maxs = ranges[out_channels:]
+    
+    # Reshape and dequantize
+    indices_2d = indices.reshape(out_channels, in_channels * kh * kw).astype(np.float32)
+    scales = (maxs - mins) / 255.0
+    weights = mins[:, None] + indices_2d * scales[:, None]
+    
+    return weights.reshape(out_channels, in_channels, kh, kw)
+```
 
 # Converting to ONNX and running inference
 
@@ -378,7 +416,49 @@ print(scores.flatten())
 
 There were 6 classifier heads found in the SceneNetv5 model, we can convert all of them to ONNX and run inference to see what they output on some sample images. This will give us a better understanding of what each head is doing and how they relate to each other. We can also compare the outputs of the different heads to see if there are any correlations or patterns that emerge.
 
-TODO: fix this in template showing copy commands for the whole thing
+Here are the classifier heads I found in `scenenet_v5_custom_classifiers/`:
+
+<table>
+<thead align="left"><tr>
+<th>Head</th>
+<th>Output Size</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>SafetyNetLight</td>
+<td>10</td>
+<td>Safety categories</td>
+</tr>
+<tr>
+<td>EventsLeaf</td>
+<td>62</td>
+<td>Event types</td>
+</tr>
+<tr>
+<td>JunkLeaf</td>
+<td>12</td>
+<td>Junk detection (i.e. blurry, screenshot, etc.)</td>
+</tr>
+<tr>
+<td>JunkHierarchical</td>
+<td>5</td>
+<td>Junk hierarchy</td>
+</tr>
+<tr>
+<td>CityNature</td>
+<td>3</td>
+<td>City vs nature</td>
+</tr>
+<tr>
+<td>SemanticDevelopment</td>
+<td>2</td>
+<td>Food vs landscape</td>
+</tr>
+</tbody>
+</table>
+
+To convert them all:
 
 ```bash command
 CSU="/System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/Resources/scenenet_v5_custom_classifiers"
@@ -391,4 +471,89 @@ for head in JunkLeaf EventsLeaf JunkHierarchical CityNature SemanticDevelopment;
 done
 ```
 
-TODO: show finished working script, combining all head models into one, and scripting a python script to run the inference that shows classification output for each head + safety features. write a script that uses the apple api's to confirm we get the same outputs for a single image
+All 5 converted successfully. Each is a tiny model (<1 MB) that takes the 768-d sceneprint as input.
+
+# Complete inference script
+
+Here's a full Python script that runs the backbone and all classifier heads:
+
+```python
+import onnxruntime as ort
+import numpy as np
+from PIL import Image
+import json
+
+SAFETY_CATEGORIES = ["unsafe", "sexual", "violence", "gore", "weapon_violence",
+                     "weapon_any", "drugs", "medically_sensitive", "riot_looting", 
+                     "terrorist_hate_groups"]
+
+def preprocess_image(image_path):
+    """Preprocess image for SceneNet: resize to 360x360, normalize to [-1, 1]"""
+    img = Image.open(image_path).convert("RGB").resize((360, 360))
+    x = np.array(img, dtype=np.float32) / 127.5 - 1.0
+    x = x.transpose(2, 0, 1)[np.newaxis, ...]  # [1, 3, 360, 360]
+    return x
+
+def run_full_pipeline(image_path):
+    x = preprocess_image(image_path)
+    
+    # Run backbone (extracts sceneprint + scene/entity classification)
+    backbone = ort.InferenceSession("scenenet_all_heads.onnx")
+    out = backbone.run(None, {"image": x})
+    omap = {backbone.get_outputs()[i].name: out[i] for i in range(len(out))}
+    
+    sceneprint = omap["inner/sceneprint"]
+    scene_scores = omap["classification/labels"].flatten()
+    entity_scores = omap["entitynet/labels"].flatten()
+    aesthetic_scores = omap["aesthetics/scores"].flatten()
+    fingerprint = omap["fingerprint/embedding"].flatten()
+    
+    # Run safety classifier on sceneprint
+    sp = sceneprint.reshape(1, 768, 1, 1)
+    safety = ort.InferenceSession("safetynet_model.onnx")
+    safety_scores = safety.run(None, {"image_embed_normalize_out": sp})[0].flatten()
+    
+    # Run other classifier heads
+    heads = {}
+    for head_name in ["JunkLeaf", "EventsLeaf", "JunkHierarchical", "CityNature", "SemanticDevelopment"]:
+        try:
+            sess = ort.InferenceSession(f"{head_name}.onnx")
+            heads[head_name] = sess.run(None, {"image_embed_normalize_out": sp})[0].flatten()
+        except:
+            pass
+    
+    return {
+        "safety": {cat: float(safety_scores[i]) for i, cat in enumerate(SAFETY_CATEGORIES)},
+        "scene_top5": get_top_k(scene_scores, "scene_labels.json", 5),
+        "entity_top5": get_top_k(entity_scores, "entity_labels.json", 5),
+        "aesthetics": {"overall": float(aesthetic_scores[0]), "interesting": float(aesthetic_scores[1])},
+        "fingerprint_hash": fingerprint.tobytes().hex()[:32],
+        "classifier_heads": heads
+    }
+
+def get_top_k(scores, label_file, k=5):
+    with open(label_file) as f:
+        labels = json.load(f)
+    top_idx = np.argsort(scores)[-k:][::-1]
+    return [(labels[i], float(scores[i])) for i in top_idx]
+
+if __name__ == "__main__":
+    import sys
+    results = run_full_pipeline(sys.argv[1])
+    
+    print("\n=== Safety Classification ===")
+    for cat, score in results["safety"].items():
+        print(f"  {cat}: {score:.4f}")
+    
+    print("\n=== Top Scene Categories ===")
+    for label, score in results["scene_top5"]:
+        print(f"  {label}: {score:.4f}")
+```
+
+Here are the results from a number of different image types:
+
+```
+Image: "beach.jpg"
+```
+
+The next blog post will be a deep dive into Apple's SummarizationKit models, which are also found in `CoreSceneUnderstanding.framework`.

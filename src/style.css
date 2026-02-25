@@ -197,6 +197,11 @@ li>p {
     margin-bottom: calc(var(--spacing-6) / 2);
 }
 
+li>p:first-child {
+    margin-top: 0;
+    display: inline;
+}
+
 li *:last-child {
     margin-bottom: var(--spacing-0);
 }
@@ -475,13 +480,17 @@ a:focus {
 .terminal-command {
     color: #fff;
     word-break: break-all;
+    white-space: pre-wrap;
     flex: 1;
 }
 
 .terminal-line.output {
-    padding-left: 20px;
+}
+
+.terminal-line.output.indented {
     border-left: 2px solid #333;
     margin-left: 4px;
+    padding-left: 8px;
 }
 
 .terminal-output {
@@ -513,6 +522,39 @@ a:focus {
 
 .terminal-copy-btn.copied {
     color: #00ff00;
+}
+
+.terminal-command-group {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.terminal-command-group:last-child {
+    margin-bottom: 0;
+}
+
+.terminal-command-group .terminal-line {
+    margin-bottom: 0;
+}
+
+.terminal-command-group .terminal-line:not(:last-child) {
+    margin-bottom: 2px;
+}
+
+.terminal-command-group:hover .terminal-copy-btn {
+    opacity: 1;
+}
+
+.terminal-prompt.continuation {
+    visibility: hidden;
+}
+
+/* .terminal-command.continuation {
+    color: #ccc;
+} */
+
+.terminal-line.no-prompt {
+    padding-left: 0;
 }
 
 /* --------------------------------------------------------------------------

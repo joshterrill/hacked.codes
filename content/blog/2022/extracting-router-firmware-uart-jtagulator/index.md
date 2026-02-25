@@ -41,14 +41,16 @@ Any piece of hardware that can be used to connect to UART is going to work sligh
 
 Plug the JTAGulator USB into your host machine and open a terminal to find what `tty` interface the JTAGulator is running on:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 ls /dev/tty*usb*
+```
+```bash output
 /dev/tty.usbserial-AB0P6L9O
 ```
 
 Then connect to it using:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 screen /dev/tty.usbserial-AB0P6L9O 115200
 ```
 
@@ -91,11 +93,17 @@ As shown above, some good places to look to find what capabilities we have are:
 
 Some other useful commands might be searching the filesystem for any `.pem` files:
 
-```shell{promptUser: root}{promptHost: GL-B1300}
+```bash command
 find . -type f -name "*.pem*"
+```
+```bash output
 ./etc/lighttpd/server.pem
 ./etc/openvpn/cert/dh1024.pem
+```
+```bash command
 head ./etc/lighttpd/server.pem
+```
+```bash output
 -----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDSnEJL9ymbUrPj
 iOwFAKIiJcobxQRPbr9qGCWJNP1wpep/dz6GOWWBAmSL/E2Dy0MNoyVfDD7sl+F8
@@ -110,8 +118,10 @@ fISQ1UivrXbQDvsYqjOjbQiktMzZZWQa5sW01C17fPcLIgSo9aEB1+9UmZsBxAt/
 
 Or maybe instead of looking for filenames, you want to search for text inside the files:
 
-```shell{promptUser: root}{promptHost: GL-B1300}
+```bash command
 grep -rnw . -e 'PRIVATE'
+```
+```bash output
 Binary file ./usr/sbin/hostapd matches
 Binary file ./usr/sbin/tor matches
 Binary file ./usr/sbin/tcpdump matches
@@ -143,8 +153,10 @@ I failed many times when attempting to copy the firmware to my host system, thes
 
 After looking up the [datasheet for this winbond 255Q256JVFQ](https://www.winbond.com/hq/support/documentation/levelOne.jsp?__locale=en&DocNo=DA00-W25Q256JV) I realized that this chip is a "3v 256MB Serial *Flash Memory*...". I researched how linux works with flash memory and found [this article on coresecurity.com](https://www.coresecurity.com/core-labs/articles/linux-flash-newbies-how-linux-works-flash) which describes getting a list of all MTD blocks (memory technology device, used for interacting with flash memory) that a system has:
 
-```shell{promptUser: root}{promptHost: GL-B1300}
+```bash command
 cat /proc/mtd
+```
+```bash output
 dev:    size   erasesize  name
 mtd0: 00040000 00010000 "0:SBL1"
 mtd1: 00020000 00010000 "0:MIBIB"
@@ -169,8 +181,10 @@ If your router *doesn't* have a USB port, but you're able to get on the same net
 
 On the router serial communication output you should see:
 
-```shell{promptUser: root}{promptHost: GL-B1300}
+```bash command
 dd if=/dev/mtd9 | nc 192.168.8.212 1337
+```
+```bash output
 54272+0 records in
 54272+0 records out
 27787264 bytes (26.5MB) copied, 20.743084 seconds, 1.3MB/s
@@ -178,8 +192,10 @@ dd if=/dev/mtd9 | nc 192.168.8.212 1337
 
 And on the receiving machine you should see:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 nc -l 1337 | dd of=./output.bin
+```
+```bash output
 45918+16182 records in
 54272+0 records out
 27787264 bytes transferred in 23.180080 secs (1198756 bytes/sec)
@@ -231,8 +247,10 @@ While the router is booting up, wait for the text  `Hit "gl" key to stop`, type 
 
 Typing `smeminfo` gives us a list of all allocated partitions and their memory information:
 
-```shell{promptUser: root}{promptHost: IPQ40xx}
+```bash command
 smeminfo
+```
+```bash output
 flash_type:             0x6
 flash_index:            0x0
 flash_chip_select:      0x0
@@ -254,13 +272,19 @@ No.: Name             Attributes            Start             Size
 
 To extract the firmware from memory, you may be lucky enough to run the `md` command to view the memory straight from U-Boot mode. We can start reading some bytes (10 bytes, then 40 bytes, then 50 bytes), starting at address `0x580000`:
 
-```shell{promptUser: root}{promptHost: IPQ40xx}
+```bash command
 md 0x580000 10
+```
+```bash output
 00580000: ab957e0d 001f6b00 00000001 00000000    .~...k..........
 00580010: 00000000 80000000 00000000 00000000    ................
 00580020: 00000000 00000000 00000000 00000000    ................
 00580030: 00000000 00000000 00000000 00000000    ................
+```
+```bash command
 md 0x580000 40
+```
+```bash output
 00580000: ab957e0d 001f6b00 00000001 00000000    .~...k..........
 00580010: 00000000 80000000 00000000 00000000    ................
 00580020: 00000000 00000000 00000000 00000000    ................
@@ -277,7 +301,11 @@ md 0x580000 40
 005800d0: 00000000 00000000 00000000 00000000    ................
 005800e0: 00000000 00000000 00000000 00000000    ................
 005800f0: 00000000 00000000 00000000 00000000    ................
+```
+```bash command
 md 0x580000 50
+```
+```bash output
 00580000: ab957e0d 001f6b00 00000001 00000000    .~...k..........
 00580010: 00000000 80000000 00000000 00000000    ................
 00580020: 00000000 00000000 00000000 00000000    ................
@@ -314,7 +342,7 @@ Another possible method of extracting firmware is to pipe the firmware out to st
 
 Kill the JTAGulator screen session by typing `killall screen` and connect to the JTAGulator using the following:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 picocom --b 115200 --logfile output.bin /dev/tty.usbserial-AB0P6L9O
 ```
 

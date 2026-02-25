@@ -48,28 +48,73 @@ function enhanceCodeBlocks() {
         const language = getLanguage(pre, highlight);
         const blockType = getBlockType(language);
         
-        // check for ```bash command followed by ```bash output
+        // check for ```bash command - collect all consecutive command/output pairs
         if (blockType.type === 'command') {
-            const nextHighlight = highlightArray[i + 1];
-            if (nextHighlight) {
-                const nextPre = nextHighlight.querySelector('pre');
-                if (nextPre) {
-                    const nextLang = getLanguage(nextPre, nextHighlight);
-                    const nextBlockType = getBlockType(nextLang);
-                    
-                    if (nextBlockType.type === 'output') {
-                        // Merge command and output into single terminal block
-                        const nextCode = nextHighlight.querySelector('code');
-                        enhanceTerminalBlockWithOutput(highlight, pre, code, nextCode);
-                        
-                        // Mark both as enhanced and hide the output block
-                        highlight.classList.add('enhanced');
-                        nextHighlight.classList.add('enhanced');
-                        nextHighlight.style.display = 'none';
-                        i++; // Skip the next block since we've processed it
-                        continue;
-                    }
+            const pairs = [];
+            let j = i;
+            let lastHighlight = null;
+            
+            while (j < highlightArray.length) {
+                const currentHighlight = highlightArray[j];
+                if (currentHighlight.classList.contains('enhanced')) break;
+                
+                // Check if there's content between this and the last highlight
+                if (lastHighlight && !areAdjacent(lastHighlight, currentHighlight)) {
+                    break;
                 }
+                
+                const currentPre = currentHighlight.querySelector('pre');
+                const currentCode = currentHighlight.querySelector('code');
+                if (!currentPre || !currentCode) break;
+                
+                const currentLang = getLanguage(currentPre, currentHighlight);
+                const currentBlockType = getBlockType(currentLang);
+                
+                if (currentBlockType.type === 'command') {
+                    const pair = { commandCode: currentCode, outputCode: null, highlights: [currentHighlight] };
+                    
+                    // Check if next block is output and adjacent
+                    const nextHighlight = highlightArray[j + 1];
+                    if (nextHighlight && !nextHighlight.classList.contains('enhanced') && areAdjacent(currentHighlight, nextHighlight)) {
+                        const nextPre = nextHighlight.querySelector('pre');
+                        if (nextPre) {
+                            const nextLang = getLanguage(nextPre, nextHighlight);
+                            const nextBlockType = getBlockType(nextLang);
+                            
+                            if (nextBlockType.type === 'output') {
+                                const nextCode = nextHighlight.querySelector('code');
+                                pair.outputCode = nextCode;
+                                pair.highlights.push(nextHighlight);
+                                lastHighlight = nextHighlight;
+                                j++; // Skip the output block
+                            }
+                        }
+                    }
+                    
+                    pairs.push(pair);
+                    if (!lastHighlight) lastHighlight = currentHighlight;
+                    else lastHighlight = pair.highlights[pair.highlights.length - 1];
+                    j++;
+                } else {
+                    break;
+                }
+            }
+            
+            if (pairs.length > 0) {
+                enhanceTerminalBlockWithPairs(highlight, pairs);
+                
+                // Mark all collected blocks as enhanced and hide non-first ones
+                pairs.forEach((pair, pairIndex) => {
+                    pair.highlights.forEach((h, hIndex) => {
+                        h.classList.add('enhanced');
+                        if (pairIndex > 0 || hIndex > 0) {
+                            h.style.display = 'none';
+                        }
+                    });
+                });
+                
+                i = j - 1; // Skip all processed blocks
+                continue;
             }
             
             highlight.classList.add('enhanced');
@@ -134,7 +179,83 @@ function isTerminalLanguage(lang) {
     return terminalLangs.includes(lang.toLowerCase());
 }
 
-function enhanceTerminalBlockWithOutput(highlight, pre, commandCode, outputCode) {
+function areAdjacent(elem1, elem2) {
+    let current = elem1.nextSibling;
+    let whitespace = '';
+    
+    while (current && current !== elem2) {
+        if (current.nodeType === Node.ELEMENT_NODE) {
+            return false;
+        }
+        if (current.nodeType === Node.TEXT_NODE) {
+            if (current.textContent.trim() !== '') {
+                return false;
+            }
+            whitespace += current.textContent;
+        }
+        current = current.nextSibling;
+    }
+    
+    if (current !== elem2) return false;
+    
+    // Check if there's a blank line (2+ consecutive newlines) between elements
+    const newlineCount = (whitespace.match(/\n/g) || []).length;
+    return newlineCount <= 1;
+}
+
+function groupCommandsByIndentation(lines) {
+    const commands = [];
+    let currentCommand = null;
+    let shellBlockDepth = 0;
+    
+    const shellBlockStart = /\b(do|then|else|\{)\s*$/;
+    const shellBlockEnd = /^(done|fi|esac|\})\b/;
+    
+    lines.forEach(line => {
+        const trimmedLine = line.trim();
+        const isIndented = /^[\s\t]/.test(line);
+        const startsBlock = shellBlockStart.test(trimmedLine);
+        const endsBlock = shellBlockEnd.test(trimmedLine);
+        
+        if (shellBlockDepth > 0) {
+            currentCommand.lines.push(line);
+            currentCommand.fullText += '\n' + line;
+            
+            if (startsBlock) {
+                shellBlockDepth++;
+            }
+            if (endsBlock) {
+                shellBlockDepth--;
+                if (shellBlockDepth === 0) {
+                    commands.push(currentCommand);
+                    currentCommand = null;
+                }
+            }
+        } else if (!isIndented) {
+            if (currentCommand) {
+                commands.push(currentCommand);
+            }
+            currentCommand = { lines: [line], fullText: line };
+            
+            if (startsBlock) {
+                shellBlockDepth = 1;
+            }
+        } else if (currentCommand) {
+            currentCommand.lines.push(line);
+            currentCommand.fullText += '\n' + line;
+        } else {
+            currentCommand = { lines: [line], fullText: line };
+        }
+    });
+    
+    if (currentCommand) {
+        commands.push(currentCommand);
+    }
+    
+    return commands;
+}
+
+function enhanceTerminalBlockWithPairs(highlight, pairs) {
     const wrapper = document.createElement('div');
     wrapper.className = 'terminal-block';
     
@@ -146,46 +267,72 @@ function enhanceTerminalBlockWithOutput(highlight, pre, commandCode, outputCode)
             <span class="terminal-btn yellow"></span>
             <span class="terminal-btn green"></span>
         </div>
-        <span class="terminal-title">Terminal — Bash</span>
+        <span class="terminal-title">Terminal - Bash</span>
     `;
     
     const content = document.createElement('div');
     content.className = 'terminal-content';
     
-    const commandText = commandCode.textContent || commandCode.innerText;
-    const commandLines = commandText.split('\n').filter(line => line.trim().length > 0);
-    
-    commandLines.forEach(line => {
-        const lineDiv = document.createElement('div');
-        lineDiv.className = 'terminal-line command';
-        
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'terminal-copy-btn';
-        copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-        copyBtn.onclick = (e) => {
-            e.stopPropagation();
-            copyToClipboard(line, copyBtn);
-        };
-        
-        lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
-        lineDiv.appendChild(copyBtn);
-        content.appendChild(lineDiv);
+    pairs.forEach(pair => {
+        renderCommandWithOutput(content, pair.commandCode, pair.outputCode);
     });
-    
-    if (outputCode) {
-        const outputText = outputCode.textContent || outputCode.innerText;
-        
-        const outputDiv = document.createElement('div');
-        outputDiv.className = 'terminal-line output';
-        outputDiv.innerHTML = `<span class="terminal-output">${escapeHtml(outputText)}</span>`;
-        content.appendChild(outputDiv);
-    }
     
     wrapper.appendChild(header);
     wrapper.appendChild(content);
     
     highlight.innerHTML = '';
     highlight.appendChild(wrapper);
+}
+
+function renderCommandWithOutput(content, commandCode, outputCode) {
+    const commandText = commandCode.textContent || commandCode.innerText;
+    const commandLines = commandText.split('\n').filter(line => line.trim().length > 0);
+    const groupedCommands = groupCommandsByIndentation(commandLines);
+    
+    groupedCommands.forEach(command => {
+        const commandWrapper = document.createElement('div');
+        commandWrapper.className = 'terminal-command-group';
+        
+        command.lines.forEach((line, lineIndex) => {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'terminal-line command';
+            
+            const isFirstLine = lineIndex === 0;
+            const isIndented = /^[\s\t]/.test(line);
+            
+            if (isFirstLine) {
+                lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'terminal-copy-btn';
+                copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+                copyBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    copyToClipboard(command.fullText, copyBtn);
+                };
+                lineDiv.appendChild(copyBtn);
+            } else if (isIndented) {
+                lineDiv.innerHTML = `<span class="terminal-prompt continuation"></span><span class="terminal-command continuation">${escapeHtml(line)}</span>`;
+            } else {
+                lineDiv.classList.add('no-prompt');
+                lineDiv.innerHTML = `<span class="terminal-command">${escapeHtml(line)}</span>`;
+            }
+            
+            commandWrapper.appendChild(lineDiv);
+        });
+        
+        content.appendChild(commandWrapper);
+    });
+    
+    if (outputCode) {
+        const outputText = outputCode.textContent || outputCode.innerText;
+        const isIndented = /^[\s\t]/.test(outputText);
+        
+        const outputDiv = document.createElement('div');
+        outputDiv.className = 'terminal-line output' + (isIndented ? ' indented' : '');
+        outputDiv.innerHTML = `<span class="terminal-output">${escapeHtml(outputText)}</span>`;
+        content.appendChild(outputDiv);
+    }
 }
 
 function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) {
@@ -200,7 +347,7 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
             <span class="terminal-btn yellow"></span>
             <span class="terminal-btn green"></span>
         </div>
-        <span class="terminal-title">Terminal — Bash</span>
+        <span class="terminal-title">Terminal - Bash</span>
     `;
     
     const content = document.createElement('div');
@@ -210,25 +357,47 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
     const lines = codeText.split('\n').filter(line => line.trim().length > 0);
     
     if (isCommand) {
-        lines.forEach(line => {
-            const lineDiv = document.createElement('div');
-            lineDiv.className = 'terminal-line command';
+        const groupedCommands = groupCommandsByIndentation(lines);
+        
+        groupedCommands.forEach(command => {
+            const commandWrapper = document.createElement('div');
+            commandWrapper.className = 'terminal-command-group';
             
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'terminal-copy-btn';
-            copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-            copyBtn.onclick = (e) => {
-                e.stopPropagation();
-                copyToClipboard(line, copyBtn);
-            };
+            command.lines.forEach((line, lineIndex) => {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'terminal-line command';
+                
+                const isFirstLine = lineIndex === 0;
+                const isIndented = /^[\s\t]/.test(line);
+                
+                if (isFirstLine) {
+                    lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
+                    
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'terminal-copy-btn';
+                    copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+                    copyBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        copyToClipboard(command.fullText, copyBtn);
+                    };
+                    lineDiv.appendChild(copyBtn);
+                } else if (isIndented) {
+                    lineDiv.innerHTML = `<span class="terminal-prompt continuation"></span><span class="terminal-command continuation">${escapeHtml(line)}</span>`;
+                } else {
+                    lineDiv.classList.add('no-prompt');
+                    lineDiv.innerHTML = `<span class="terminal-command">${escapeHtml(line)}</span>`;
+                }
+                
+                commandWrapper.appendChild(lineDiv);
+            });
             
-            lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
-            lineDiv.appendChild(copyBtn);
-            content.appendChild(lineDiv);
+            content.appendChild(commandWrapper);
         });
     } else {
+        const isIndented = /^[\s\t]/.test(codeText);
+        
         const outputDiv = document.createElement('div');
-        outputDiv.className = 'terminal-line output';
+        outputDiv.className = 'terminal-line output' + (isIndented ? ' indented' : '');
         outputDiv.innerHTML = `<span class="terminal-output">${escapeHtml(codeText)}</span>`;
         content.appendChild(outputDiv);
     }

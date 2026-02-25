@@ -16,15 +16,19 @@ FOSCAM posts the firmware for all of their devices online for public download. I
 
 Running a `file` command on the downloaded firmware bin file gives us the following output:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 file FosIPC_J_app_ver2.x.2.63.bin
+```
+```bash output
 FosIPC_J_app_ver2.x.2.63.bin: openssl enc'd data with salted password
 ```
 
 Now we know the firmware is encrypted with openssl, using some sort of salted password. We should expect that we won't see any strings of value and running `binwalk` shouldn't give us anything.
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 strings FosIPC_J_app_ver2.x.2.63.bin
+```
+```bash output
 Salted__G
 1)4cu
 ]eTZ
@@ -40,8 +44,11 @@ $1hl
 .7C5w
 RBtM
 
+```
+```bash command
 binwalk FosIPC_J_app_ver2.x.2.63.bin
-
+```
+```bash output
 DECIMAL       HEXADECIMAL     DESCRIPTION
 --------------------------------------------------------------------------------
 0             0x0             OpenSSL encryption, salted, salt: 0x47A7AC8464AEB38F
@@ -84,8 +91,10 @@ Now we can run `binwalk -eM firmware-extract.bin` to see what's inside.
 
 Poking around the firmware, we see some interesting things:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 find . -type f -name "*.pem"
+```
+```bash output
 ./dhparams.pem
 ./foscloud-client.pem
 ./iot-client-key.pem
@@ -94,7 +103,11 @@ find . -type f -name "*.pem"
 ./squashfs-root/mtd/app/etc_upgrade/iot-client-key.pem
 ./squashfs-root/mtd/app/etc_upgrade/sm_cn_private.pem
 ./sm_cn_private.pem
+```
+```bash command
 find . -type f -name "*Firmware*"
+```
+```bash output
 ./squashfs-root/mtd/app/bin/FirmwareUpgrade
 ./FirmwareUpgrade
 ```
@@ -119,8 +132,10 @@ This code looks like it's doing some sort of string formatting in the `ReformStr
 
 Searching through the `binwalk` extract for this file gives us the following:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 find . -type f -name "libcommonLib.so"
+```
+```bash output
 ./squashfs-root/mtd/app/basic_lib/libcommonLib.so
 ./libcommonLib.so
 ```
@@ -186,7 +201,7 @@ print(result)
 Running the script reveals that the password for this firmware is `WWZ7zy*v2` - we can test this by using the same command given to us in the output, and running it on the firmware we downloaded from the website:
 
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 openssl enc -d -aes-128-cbc -md md5 -k "WWZ7zy*v2" -in FosIPC_J_app_ver2.x.2.63.bin > decrypted-firmware.bin
 ```
 
@@ -198,7 +213,7 @@ And then running `binwalk -eM decrypted-firmware.bin` outputs a filesystem that 
 
 Now that we have the key extraction script written in python, we can search through all of the other files to try to find other places that `ReformString` is being used. I wrote a script that I called `findtext` that has the following:
 
-```bash
+```bash command
 echo "Searching files for '$1'"
 for entry in $(find . -type f -name "*"); do
     if grep -q -- $1 <<< $(strings $entry); then
@@ -209,8 +224,10 @@ done
 
 And when I run: `findtext "ReformString"`, I get the following results:
 
-```shell{promptUser: josh}{promptHost: laptop}
+```bash command
 findtext "ReformString"
+```
+```bash output
 Searching files for 'ReformString'
 Found text in: ./_0.extracted/_mtd.sqfs.extracted/squashfs-root/mtd/app/bin/webService
 Found text in: ./_0.extracted/_mtd.sqfs.extracted/squashfs-root/mtd/app/bin/FirmwareUpgrade
