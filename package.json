@@ -54,7 +54,7 @@
     "url": "git+https://github.com/joshterrill/hacked.codes.git"
   },
   "scripts": {
-    "build": "gatsby build",
+    "build": "gatsby clean && gatsby build",
     "dev": "rm -rf ./.cache && gatsby develop",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json}\"",
     "start": "gatsby develop",

@@ -1,0 +1,7 @@
+[build]
+  command = "npm run build"
+  publish = "public"
+
+[build.environment]
+  GATSBY_CPU_COUNT = "2"
+  NODE_VERSION = "18"
