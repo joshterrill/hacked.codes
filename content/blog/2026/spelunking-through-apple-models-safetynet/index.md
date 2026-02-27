@@ -10,7 +10,7 @@ published: true
 
 While doing some research [reverse engineering Apple's NeuralHash](https://github.com/joshterrill/python-neuralhash) model, I came across a treasure trove of other espresso models on Apple devices. You can find them by running `find /System/Library/ -name "*espresso*"`. After creating [espresso2onnx](https://github.com/joshterrill/espresso2onnx), a python script that I used in the NeuralHash project to convert espresso models to a more usable ONNX format, I tried to see what other models I could convert and analyze.
 
-In my [previous work on NeuralHash](https://github.com/joshterrill/python-neuralhash), the `.espresso.net` and `.espresso.shape` files were plain JSON and could be called with `json.load()`. Those older models (NeuralHash, pet classifier, sound classifier, various CoreNLP models) all used this straightforward format. But these newer models in `CoreSceneUnderstanding.framework` use a different format entirely - a proprietary `pbze` container with LZFSE compression. More on that later.
+In my [previous work on NeuralHash](https://github.com/joshterrill/python-neuralhash), the `.espresso.net` and `.espresso.shape` files were plain JSON and could be called with `json.load()`. Those older models (NeuralHash, pet classifier, sound classifier, various CoreNLP models) all used this straightforward format. But these newer models in `CoreSceneUnderstanding.framework` use a different format entirely - a custom `pbze` header followed by an LZFSE compressed payload.
 
 Apple already has a couple of public API's that use some of these models, looking through their documentation I found [`VNClassifyImageRequest`](https://developer.apple.com/documentation/vision/vnclassifyimagerequest), [`VNGenerateImageFeaturePrintRequest`](https://developer.apple.com/documentation/vision/vngenerateimagefeatureprintrequest) and [`SCSensitivityAnalyzer`](https://developer.apple.com/documentation/sensitivecontentanalysis/scsensitivityanalyzer) 
 
@@ -341,7 +341,7 @@ This tells us that the weights are stored in quantized format, with lookup table
 1. **Weights blob (id=3):** Contains uint8 indices (1 byte per weight)
 2. **Ranges blob (id=5):** Contains float32 range values for dequantization
 
-I didn't know how to concvert the uint8 indices back to float32 weights, so I had to do some experimentation to figure out the correct dequantization formula. I found some documentation on specific [Apple algorithms](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html) but didn't find any specific information on how the LUT quantization works, so I had to reverse engineer it myself. I tried a few different formulas based on common quantization schemes, but only one of them produced results that made sense given the range values in the ranges blob. Here are the different formulas I tried these different methods and ended up discovering the correct one which matches the [same way TensorFlowLite does quantization](https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec).
+I didn't know how to convert the uint8 indices back to float32 weights, so I had to do some experimentation to figure out the correct dequantization formula. I found some documentation on specific [Apple algorithms](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html) but didn't find any specific information on how the LUT quantization works, so I had to reverse engineer it myself. I tried a few different formulas based on common quantization schemes, but only one of them produced results that made sense given the values in the ranges blob. With some Codex help, I found the correct one which ended up matching [TensorFlowLite's quantization](https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec).
 
 To verify, I looked at the final classifier layer (512 -> 10), which had only 20 range values for 10 output channels:
 
@@ -385,11 +385,11 @@ def dequantize_lut_weights(indices_blob, ranges_blob, out_channels, in_channels,
 
 # Converting to ONNX and running inference
 
-Since my original `espresso2onnx` script was built for the older JSON format for the net and shape files, I had to modify it to handle the new pbze compressed format. Once I added that functionality, I saw that there were a couple of new layer types that I haven't come across before, so I added support for those as well. Eventually, I was finally able to run: `python3 espresso2onnx.py /tmp/safetynet_model/ -o safetynet_model.onnx`
+Since my original `espresso2onnx` script was built for the older JSON format for the net and shape files, I had to modify it to handle the new pbze compressed format, then there were a handful of new layer types that also needed to be implemented. I was finally able to extract the ONNX model by running: `python3 espresso2onnx.py /tmp/safetynet_model/ -o safetynet_model.onnx`
 
 Then I can do the same for the SceneNetv5 model: `python3 espresso2onnx.py /tmp/scenenet_model/ -o scenenet_model.onnx`
 
-Then load them into an inference script:
+And load them into an inference script:
 
 ```python
 import onnxruntime as ort
@@ -438,7 +438,7 @@ Here are the classifier heads I found in `scenenet_v5_custom_classifiers/`:
 <tr>
 <td>JunkLeaf</td>
 <td>12</td>
-<td>Junk detection (i.e. blurry, screenshot, etc.)</td>
+<td>Junk detection (i.e. blurry photo, screenshot, etc.)</td>
 </tr>
 <tr>
 <td>JunkHierarchical</td>
@@ -471,83 +471,253 @@ for head in JunkLeaf EventsLeaf JunkHierarchical CityNature SemanticDevelopment;
 done
 ```
 
-All 5 converted successfully. Each is a tiny model (<1 MB) that takes the 768-d sceneprint as input.
+All 5 converted successfully. Each being a small model that takes the 768-d sceneprint as input.
 
 # Complete inference script
 
 Here's a full Python script that runs the backbone and all classifier heads:
 
 ```python
-import onnxruntime as ort
+import argparse
+import os
+import sys
+import subprocess
 import numpy as np
-from PIL import Image
-import json
 
-SAFETY_CATEGORIES = ["unsafe", "sexual", "violence", "gore", "weapon_violence",
-                     "weapon_any", "drugs", "medically_sensitive", "riot_looting", 
-                     "terrorist_hate_groups"]
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SCENENET_MODEL = os.path.join(SCRIPT_DIR, "scenenet_classifier.onnx")
+SAFETY_MODEL = os.path.join(SCRIPT_DIR, "safetynet_model.onnx")
+
+SAFETY_CATEGORIES = [
+    "unsafe", "sexual", "violence", "gore", "weapon_violence",
+    "weapon_any", "drugs", "medically_sensitive", "riot_looting",
+    "terrorist_hate_groups"
+]
+
+TAXONOMY_BASE = (
+    "/System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework"
+    "/Versions/A/Resources/taxonomies"
+)
+
+
+def load_bplist(path):
+    if not os.path.exists(path):
+        return None
+    try:
+        import plistlib
+        result = subprocess.run(
+            ["plutil", "-convert", "xml1", "-o", "-", path],
+            capture_output=True, check=True)
+        return plistlib.loads(result.stdout)
+    except Exception:
+        return None
+
+
+def load_taxonomy_labels():
+    labels = {
+        "scene_vocab": None,
+        "entity_vocab": None,
+        "human_readable": None,
+    }
+    en_base = f"{TAXONOMY_BASE}/EntityNet/v0b"
+    labels["human_readable"] = load_bplist(f"{en_base}/ENv0b_attribute__humanReadableLabel.bplist")
+    labels["scene_vocab"] = load_bplist(f"{en_base}/ENv0b_vocabulary00__scenenet_leaf.bplist")
+    labels["entity_vocab"] = load_bplist(f"{en_base}/ENv0b_vocabulary02__entitynet.bplist")
+    return labels
+
+
+def get_label(labels, vocab_key, index):
+    vocab = labels.get(vocab_key)
+    hr = labels.get("human_readable")
+    if vocab and index < len(vocab):
+        ident = vocab[index]
+        if hr and ident in hr:
+            return hr[ident]
+        if ident:
+            return ident
+    return f"[{index}]"
+
 
 def preprocess_image(image_path):
-    """Preprocess image for SceneNet: resize to 360x360, normalize to [-1, 1]"""
+    from PIL import Image
     img = Image.open(image_path).convert("RGB").resize((360, 360))
     x = np.array(img, dtype=np.float32) / 127.5 - 1.0
-    x = x.transpose(2, 0, 1)[np.newaxis, ...]  # [1, 3, 360, 360]
+    x = x.transpose(2, 0, 1)[np.newaxis, ...]
     return x
 
-def run_full_pipeline(image_path):
-    x = preprocess_image(image_path)
-    
-    # Run backbone (extracts sceneprint + scene/entity classification)
-    backbone = ort.InferenceSession("scenenet_all_heads.onnx")
-    out = backbone.run(None, {"image": x})
-    omap = {backbone.get_outputs()[i].name: out[i] for i in range(len(out))}
-    
-    sceneprint = omap["inner/sceneprint"]
-    scene_scores = omap["classification/labels"].flatten()
-    entity_scores = omap["entitynet/labels"].flatten()
-    aesthetic_scores = omap["aesthetics/scores"].flatten()
-    fingerprint = omap["fingerprint/embedding"].flatten()
-    
-    # Run safety classifier on sceneprint
-    sp = sceneprint.reshape(1, 768, 1, 1)
-    safety = ort.InferenceSession("safetynet_model.onnx")
-    safety_scores = safety.run(None, {"image_embed_normalize_out": sp})[0].flatten()
-    
-    # Run other classifier heads
-    heads = {}
-    for head_name in ["JunkLeaf", "EventsLeaf", "JunkHierarchical", "CityNature", "SemanticDevelopment"]:
-        try:
-            sess = ort.InferenceSession(f"{head_name}.onnx")
-            heads[head_name] = sess.run(None, {"image_embed_normalize_out": sp})[0].flatten()
-        except:
-            pass
-    
-    return {
-        "safety": {cat: float(safety_scores[i]) for i, cat in enumerate(SAFETY_CATEGORIES)},
-        "scene_top5": get_top_k(scene_scores, "scene_labels.json", 5),
-        "entity_top5": get_top_k(entity_scores, "entity_labels.json", 5),
-        "aesthetics": {"overall": float(aesthetic_scores[0]), "interesting": float(aesthetic_scores[1])},
-        "fingerprint_hash": fingerprint.tobytes().hex()[:32],
-        "classifier_heads": heads
-    }
 
-def get_top_k(scores, label_file, k=5):
-    with open(label_file) as f:
-        labels = json.load(f)
-    top_idx = np.argsort(scores)[-k:][::-1]
-    return [(labels[i], float(scores[i])) for i in top_idx]
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("image", help="Path to input image")
+    parser.add_argument("--only-human", action="store_true", help="Skip entities without human-readable labels")
+    args = parser.parse_args()
+
+    image_path = args.image
+
+    if not os.path.exists(image_path):
+        print(f"Error: Image not found: {image_path}")
+        sys.exit(1)
+    if not os.path.exists(SCENENET_MODEL):
+        print(f"Error: Model not found: {SCENENET_MODEL}")
+        sys.exit(1)
+    if not os.path.exists(SAFETY_MODEL):
+        print(f"Error: Safety model not found: {SAFETY_MODEL}")
+        sys.exit(1)
+
+    import onnxruntime as ort
+
+    print(f"Loading SceneNet v5 model...")
+    sess = ort.InferenceSession(SCENENET_MODEL)
+
+    labels = load_taxonomy_labels()
+    has_labels = labels["human_readable"] is not None
+
+    x = preprocess_image(image_path)
+    print(f"Image: {image_path}")
+
+    print("Running inference...")
+    outputs = sess.run(None, {"image": x})
+    output_map = {sess.get_outputs()[i].name: outputs[i] for i in range(len(outputs))}
+
+    top_n = 25
+
+    if "classification/labels" in output_map:
+        scores = output_map["classification/labels"].flatten()
+        top_idx = np.argsort(scores)[::-1][:top_n]
+        print(f"\n{'═' * 55}")
+        print(f"SCENE CLASSIFICATION (top {top_n} of {len(scores)})")
+        print(f"{'═' * 55}")
+        for idx in top_idx:
+            label = get_label(labels, "scene_vocab", idx) if has_labels else f"[{idx}]"
+            bar = "█" * max(1, int(scores[idx] * 40))
+            print(f"  {scores[idx]:7.4f}  {bar}  {label}")
+
+    if "entitynet/labels" in output_map:
+        scores = output_map["entitynet/labels"].flatten()
+        print(f"\n{'═' * 55}")
+        print(f"ENTITY RECOGNITION (top {top_n} of {len(scores)})")
+        print(f"{'═' * 55}")
+        count = 0
+        for idx in np.argsort(scores)[::-1]:
+            label = get_label(labels, "entity_vocab", idx) if has_labels else f"[{idx}]"
+            if args.only_human and label.startswith("["):
+                continue
+            bar = "█" * max(1, int(scores[idx] * 40))
+            print(f"  {scores[idx]:7.4f}  {bar}  {label}")
+            count += 1
+            if count >= top_n:
+                break
+
+    if "inner/sceneprint" in output_map:
+        sp = output_map["inner/sceneprint"]
+        sp_flat = sp.flatten()
+        print(f"\n{'═' * 55}")
+        print(f"SCENEPRINT: 768-d, range=[{sp_flat.min():.4f}, {sp_flat.max():.4f}]")
+
+        safety_sess = ort.InferenceSession(SAFETY_MODEL)
+        safety_out = safety_sess.run(None, {"image_embed_normalize_out": sp.reshape(1, 768, 1, 1)})
+
+        for i, o in enumerate(safety_sess.get_outputs()):
+            if "post_act" in o.name:
+                probs = safety_out[i].flatten()
+                print(f"\n{'═' * 55}")
+                print(f"SAFETY CLASSIFICATION")
+                print(f"{'═' * 55}")
+                for cat, prob in zip(SAFETY_CATEGORIES, probs):
+                    print(f"  {prob:7.4f}  {cat}")
+                break
+
 
 if __name__ == "__main__":
-    import sys
-    results = run_full_pipeline(sys.argv[1])
-    
-    print("\n=== Safety Classification ===")
-    for cat, score in results["safety"].items():
-        print(f"  {cat}: {score:.4f}")
-    
-    print("\n=== Top Scene Categories ===")
-    for label, score in results["scene_top5"]:
-        print(f"  {label}: {score:.4f}")
+    main()
+```
+
+I added an optional `--only-human` flag to filter out entity recognition results that don't have human-readable labels, since there are thousands of them and many are not very interpretable.
+
+And I can run it like this:
+
+```bash command
+python run_scenenet_classifier.py /tmp/sf-chinatown.jpeg --only-human
+```
+```bash output
+Loading SceneNet v5 model...
+Image: /tmp/sf-chinatown.jpeg
+Running inference...
+
+═══════════════════════════════════════════════════════
+SCENE CLASSIFICATION (top 25 of 1374)
+═══════════════════════════════════════════════════════
+   0.0300  █  Raw Metal
+   0.0209  █  Circuit Board
+   0.0180  █  Screenshot
+   0.0083  █  Textile
+   0.0077  █  Puzzles
+   0.0065  █  Gears
+   0.0060  █  Adult
+   0.0052  █  Raw Glass
+   0.0047  █  Foliage
+   0.0045  █  [904]
+   0.0042  █  Fence
+   0.0040  █  Spiderweb
+   0.0038  █  Wood Processed
+   0.0037  █  Polka Dots
+   0.0037  █  Jigsaw
+   0.0035  █  Map
+   0.0033  █  Cactus
+   0.0027  █  Diagram
+   0.0023  █  [1168]
+   0.0023  █  Handwriting
+   0.0022  █  Branch
+   0.0018  █  Window
+   0.0018  █  Spider
+   0.0018  █  Illustrations
+   0.0017  █  [1355]
+
+═══════════════════════════════════════════════════════
+ENTITY RECOGNITION (top 25 of 7287)
+═══════════════════════════════════════════════════════
+   0.7122  ████████████████████████████  Pattern
+   0.7117  ████████████████████████████  Green
+   0.6554  ██████████████████████████  Turquoise
+   0.6193  ████████████████████████  Red
+   0.6068  ████████████████████████  Pink
+   0.5983  ███████████████████████  Yellow
+   0.5917  ███████████████████████  Text
+   0.5350  █████████████████████  Font
+   0.5038  ████████████████████  Purple
+   0.4920  ███████████████████  Fractal Art
+   0.4595  ██████████████████  Violet
+   0.4479  █████████████████  Monochrome
+   0.4137  ████████████████  Line
+   0.4115  ████████████████  Drawing
+   0.4043  ████████████████  Close-Up
+   0.4014  ████████████████  Lighting
+   0.3920  ███████████████  Reef
+   0.3885  ███████████████  Lavender
+   0.3857  ███████████████  Black and White
+   0.3758  ███████████████  Tartan
+   0.3748  ██████████████  Symmetry
+   0.3746  ██████████████  Hair
+   0.3741  ██████████████  Spine
+   0.3740  ██████████████  Face
+   0.3667  ██████████████  Cartoon
+
+═══════════════════════════════════════════════════════
+SCENEPRINT: 768-d, range=[-0.8027, 0.3495]
+
+═══════════════════════════════════════════════════════
+SAFETY CLASSIFICATION
+═══════════════════════════════════════════════════════
+   0.0037  unsafe
+   0.0001  sexual
+   0.0001  violence
+   0.0002  gore
+   0.0000  weapon_violence
+   0.0016  weapon_any
+   0.0011  drugs
+   0.0000  medically_sensitive
+   0.0000  riot_looting
+   0.0000  terrorist_hate_groups
 ```
 
 The next blog post will be a deep dive into Apple's SummarizationKit models, which are also found in `CoreSceneUnderstanding.framework`.
