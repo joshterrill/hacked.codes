@@ -860,16 +860,14 @@ code[class*="language-"], pre[class*="language-"] {
 }
 
 :not(pre) > code[class*="language-"] {
-    /* padding: .1em; */
-    padding: 0 0.1rem !important;
-    border-radius: 0px !important;
-    white-space: normal;
-    background: #4a4a4a !important;
-    font-family: 'Source Code Pro', monospace !important;
-    color: #f7f7f7 !important;
     word-wrap: break-word;
+    background: #4a4a4a !important;
+    color: #f7f7f7 !important;
+    font-family: Source Code Pro, monospace !important;
+    padding: 0.1rem 0.25rem !important;
+    border-radius: 4px !important;
+    white-space: normal;
 }
-
 
 a code.language-text {
     /* color: #4abfff !important; */
