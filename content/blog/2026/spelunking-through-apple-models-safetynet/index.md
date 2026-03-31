@@ -418,7 +418,7 @@ There were 6 classifier heads found in the SceneNetv5 model, we can convert all 
 
 Here are the classifier heads I found in `scenenet_v5_custom_classifiers/`:
 
-<table>
+<table border="1" cellpadding="5" cellspacing="0">
 <thead align="left"><tr>
 <th>Head</th>
 <th>Output Size</th>
