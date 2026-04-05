@@ -8,13 +8,19 @@ published: true
 
 # Finding the models
 
-While doing some research [reverse engineering Apple's NeuralHash](https://github.com/joshterrill/python-neuralhash) model, I came across a treasure trove of other espresso models on Apple devices. You can find them by running `find /System/Library/ -name "*espresso*"`. After creating [espresso2onnx](https://github.com/joshterrill/espresso2onnx), a python script that I used in the NeuralHash project to convert espresso models to a more usable ONNX format, I tried to see what other models I could convert and analyze.
+I became interested in Apple's on-device safety models after reading about NeuralHash, which is a perceptual hashing model that Apple uses to detect known CSAM (child sexual abuse material) images on users' devices without uploading the actual images to the cloud. NeuralHash is part of a larger family of models that Apple has developed for various classification tasks. After successfully [reverse engineering NeuralHash](https://github.com/joshterrill/python-neuralhash), I wanted to see what other safety models Apple devices have.
 
-In my [previous work on NeuralHash](https://github.com/joshterrill/python-neuralhash), the `.espresso.net` and `.espresso.shape` files were plain JSON and could be called with `json.load()`. Those older models (NeuralHash, pet classifier, sound classifier, various CoreNLP models) all used this straightforward format. But these newer models in `CoreSceneUnderstanding.framework` use a different format entirely - a custom `pbze` header followed by an LZFSE compressed payload.
+They come in the form of *espresso models*, which usually consist of three files: `.espresso.net`, `.espresso.shape`, and `.espresso.weights`. You can find these files by running `find /System/Library/ -name "*espresso*"`. You can see through the naming convention that these models are used for several things such as image classification, object detection, text summarization, and more. One of the more interesting ones that I found is called SafetyNetLight, which is a model that classifies images into 10 safety categories. It's used in Apple's content moderation features to help identify potentially harmful content on users' devices. I created a library called [espresso2onnx](https://github.com/joshterrill/espresso2onnx) that converts these espresso models to a more usable ONNX format.
+
+<div class="info-block info">
+    <p>
+    <b>Info</b>  &rarr; When doing the original research on NeuralHash, all of the espresso files were plain JSON. This is true for any of the older models like pet classifier, sound classifier, etc. The newer espresso models in `CoreSceneUnderstanding.framework` use a different format entirely: a custom `pbze` header followed by an LZFSE compressed payload.<br>
+    </p>
+</div>
 
 Apple already has a couple of public API's that use some of these models, looking through their documentation I found [`VNClassifyImageRequest`](https://developer.apple.com/documentation/vision/vnclassifyimagerequest), [`VNGenerateImageFeaturePrintRequest`](https://developer.apple.com/documentation/vision/vngenerateimagefeatureprintrequest) and [`SCSensitivityAnalyzer`](https://developer.apple.com/documentation/sensitivecontentanalysis/scsensitivityanalyzer) 
 
-`VNGenerateImageFeaturePrintRequest` is particularly interesting because it gives us access to the same 768-dimensional "sceneprint" embedding that SafetyNetLight consumes. By extracting the sceneprint via the public Vision API and comparing it against our ONNX model's output, we can verify that our converted model is producing correct results. Similarly, `VNClassifyImageRequest` uses the same SceneNet backbone internally for its 1,374 scene categories, giving us another verification point.
+`VNGenerateImageFeaturePrintRequest` is particularly interesting because it gives us access to the same 768-dimensional "sceneprint" embedding that SafetyNetLight consumes. By extracting the sceneprint via the public Vision API and comparing it against our ONNX model's output, we can verify that our converted model is producing correct results. Similarly, `VNClassifyImageRequest` uses the same SceneNet backbone internally for its 1,374 scene categories, giving us another point of verfication.
 
 # Analysis of `CoreSceneUnderstanding.framework` networks
 
@@ -49,7 +55,7 @@ CoreSceneUnderstanding.framework/Resources/
         └── ... (label mappings)
 ```
 
-We discover a taxonomy list stored as a binary plist (bplist) file for the SafetyNetLight model revealing the following categories:
+We discover a taxonomy list stored as a binary plist (bplist) file for the SafetyNetLight model revealing the following classification categories:
 
 ```bash command
 plutil -p /System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/Resources/taxonomies/SafetyNetLight/SafetyNetLight-v1a_vocabulary00__leaf.bplist
@@ -69,9 +75,7 @@ plutil -p /System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Ver
 ]
 ```
 
-We can assume that these are most likely the categories that are used for the probability distribution in the model.
-
-Next I tried to run the same `espresso2onnx` script on the `SafetyNetLight_v1.1.0_vx6zphgfsp_15880_safetynet_quant.espresso.net`, `SafetyNetLight_v1.1.0_vx6zphgfsp_15880_safetynet_quant.espresso.weights`, and `SafetyNetLight_v1.1.0_vx6zphgfsp_15880_safetynet_quant.espresso.shape` but ran into unpacking errors in the net and shape files. This lead me to believe that something in the way that Apple packs these models may have changed since the version I used to build the NeuralHash library. In previous versions, these files were standard JSON files with a different extension, these files use some sort of proprietary format with a magic number of *pbze*:
+Now we can analyze look at the structure of the espresso files. Running `xxd` reveals the magic number `70 62 7a 65`, a proprietary format called *pbze*.
 
 ```bash command
 xxd /System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/Resources/scenenet_v5_custom_classifiers/SafetyNetLight/SafetyNetLight_v1.1.0/SafetyNetLight_v1.1.0_vx6zphgfsp_15880_safetynet_quant.espresso.net | head -n 5
@@ -84,7 +88,7 @@ xxd /System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/
 00000040: aaaa 8a22 30a6 e9d8 2319 635e 2c12 40c9  ..."0...#.c^,.@.
 ```
 
-I couldn't find any official Apple documentation on this, but `bvx2` appears to be a [magic number](https://en.wikipedia.org/wiki/List_of_file_signatures) for the LZFSE compression format. We can confirm this by crafting a `dd` command to skip the first 28 bytes (the header) and then pipe the rest of the file into `lzfse` for decompression:
+I couldn't find any official Apple documentation on this, but 28 bytes into the header, we see `bvx2` which appears to be a [magic number](https://en.wikipedia.org/wiki/List_of_file_signatures) for the LZFSE compression format. We can confirm this by crafting a `dd` command that skips the header and pipes the rest of the file into `lzfse` for decompression:
 
 ```bash command
 dd if=/System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/Resources/scenenet_v5_custom_classifiers/SafetyNetLight/SafetyNetLight_v1.1.0/SafetyNetLight_v1.1.0_vx6zphgfsp_15880_safetynet_quant.espresso.net bs=1 skip=28 2>/dev/null | lzfse -decode -o safetynet.espresso.net.json
@@ -133,7 +137,7 @@ cat safetynet.espresso.net.json | head -n 40
       "Ny" : 1,
 ```
 
-We discover here that input is a convolution layer with 1024 input channels and 768 output channels. This suggests that SafetyNetLight is not a standalone model, but rather a custom classifier that is built on top of the SceneNetv5 model, which produces the image embeddings that are fed into this model. The weights and quantization lookup tables are stored in the weights file and the shape file should contain the dimensions of these blobs, but it is also compressed with the same format. 
+We discover that the input is a convolution layer with 1024 input channels and 768 output channels. This suggests that SafetyNetLight is not a standalone model, but rather a custom classifier that is built on top of the SceneNetv5 model, which produces the image embeddings that are fed into this model. The weights and quantization lookup tables are stored in the weights file and the shape file contains the dimensions of the blobs. We can extract the shape file in the same way:
 
 ```bash command
 dd if=/System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/Resources/scenenet_v5_custom_classifiers/SafetyNetLight/SafetyNetLight_v1.1.0/SafetyNetLight_v1.1.0_vx6zphgfsp_15880_safetynet_quant.espresso.shape bs=1 skip=28 2>/dev/null | lzfse -decode -o safetynet.espresso.shape.json
@@ -162,7 +166,7 @@ cat safetynet.espresso.shape.json | head -n 20
       "n" : 1,
 ```
 
-The weights file is not in the same format as the net and shape file, we'll come back to it later after we analyze the net and shape files for SceneNetv5.
+Before extracting the details from the weights files, we can run the same process on the SceneNetv5 model to see what it looks like.
 
 ```bash command
 dd if=/System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/Resources/scenenet_v5_model/SceneNet_v5.13.0_8wiqmpbbig_fe1.3_sc3.3_sa2.4_ae2.4_so2.4_od1.5_fp1.5_en0.2/SceneNet_v5.13.0_8wiqmpbbig_fe1.3_sc3.3_sa2.4_ae2.4_so2.4_od1.5_fp1.5_en0.2.espresso.shape bs=1 skip=28 2>/dev/null | lzfse -decode -o scenenet.espresso.shape.json
@@ -301,7 +305,7 @@ cat scenenet_sydro_model_default_config.json | jq
 }
 ```
 
-Drawing it out as a diagram, we have:
+The image classification flow is as follows:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -341,7 +345,7 @@ This tells us that the weights are stored in quantized format, with lookup table
 1. **Weights blob (id=3):** Contains uint8 indices (1 byte per weight)
 2. **Ranges blob (id=5):** Contains float32 range values for dequantization
 
-I didn't know how to convert the uint8 indices back to float32 weights, so I had to do some experimentation to figure out the correct dequantization formula. I found some documentation on specific [Apple algorithms](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html) but didn't find any specific information on how the LUT quantization works, so I had to reverse engineer it myself. I tried a few different formulas based on common quantization schemes, but only one of them produced results that made sense given the values in the ranges blob. With some Codex help, I found the correct one which ended up matching [TensorFlowLite's quantization](https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec).
+I didn't know how to convert the uint8 indices back to float32 weights, so I had to do some experimentation to figure out the correct dequantization formula. I found some documentation on specific [Apple algorithms](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html) but didn't find any specific information on how the LUT quantization works. I tried a few different formulas based on common quantization schemes, but only one of them produced results that made sense given the values in the ranges blob. With some Codex help, I found the correct one which ended up matching [TensorFlowLite's quantization](https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec).
 
 To verify, I looked at the final classifier layer (512 -> 10), which had only 20 range values for 10 output channels:
 
@@ -385,11 +389,11 @@ def dequantize_lut_weights(indices_blob, ranges_blob, out_channels, in_channels,
 
 # Converting to ONNX and running inference
 
-Since my original `espresso2onnx` script was built for the older JSON format for the net and shape files, I had to modify it to handle the new pbze compressed format, then there were a handful of new layer types that also needed to be implemented. I was finally able to extract the ONNX model by running: `python3 espresso2onnx.py /tmp/safetynet_model/ -o safetynet_model.onnx`
+After making some modifications to my `espresso2onnx` script, I was finally able to extract the ONNX model by running: `python3 espresso2onnx.py /tmp/safetynet_model/ -o safetynet_model.onnx`
 
 Then I can do the same for the SceneNetv5 model: `python3 espresso2onnx.py /tmp/scenenet_model/ -o scenenet_model.onnx`
 
-And load them into an inference script:
+And finally, we can run inference on some sample images to see the safety scores:
 
 ```python
 import onnxruntime as ort
@@ -499,7 +503,6 @@ TAXONOMY_BASE = (
     "/Versions/A/Resources/taxonomies"
 )
 
-
 def load_bplist(path):
     if not os.path.exists(path):
         return None
@@ -511,7 +514,6 @@ def load_bplist(path):
         return plistlib.loads(result.stdout)
     except Exception:
         return None
-
 
 def load_taxonomy_labels():
     labels = {
@@ -525,7 +527,6 @@ def load_taxonomy_labels():
     labels["entity_vocab"] = load_bplist(f"{en_base}/ENv0b_vocabulary02__entitynet.bplist")
     return labels
 
-
 def get_label(labels, vocab_key, index):
     vocab = labels.get(vocab_key)
     hr = labels.get("human_readable")
@@ -537,14 +538,12 @@ def get_label(labels, vocab_key, index):
             return ident
     return f"[{index}]"
 
-
 def preprocess_image(image_path):
     from PIL import Image
     img = Image.open(image_path).convert("RGB").resize((360, 360))
     x = np.array(img, dtype=np.float32) / 127.5 - 1.0
     x = x.transpose(2, 0, 1)[np.newaxis, ...]
     return x
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -632,9 +631,7 @@ if __name__ == "__main__":
     main()
 ```
 
-I added an optional `--only-human` flag to filter out entity recognition results that don't have human-readable labels, since there are thousands of them and many are not very interpretable.
-
-And I can run it like this:
+There are thousands of entity recognition categories, many of them them not having human-readable labels, so I added a `--only-human` flag to filter these out.
 
 ```bash command
 python run_scenenet_classifier.py /tmp/sf-chinatown.jpeg --only-human
@@ -720,4 +717,4 @@ SAFETY CLASSIFICATION
    0.0000  terrorist_hate_groups
 ```
 
-The next blog post will be a deep dive into Apple's SummarizationKit models, which are also found in `CoreSceneUnderstanding.framework`.
+The next post will be an even deeper dive into the Apple SummarizationKit models, which are also found in `CoreSceneUnderstanding.framework`.
