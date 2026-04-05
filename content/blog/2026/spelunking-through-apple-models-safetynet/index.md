@@ -1,7 +1,7 @@
 ---
 title: Spelunking through Apple's safety models - SafetyNetLight
 date: "2026-02-20T23:20:10.000Z"
-description: On every Apple device are a group of offline classification models that classify images across a number of categories. We'll reverse engineer their safety model, SafetyNetLight. While doing this, we also discover SceneNetv5, which is a parent model that produces embeddings for scene classification, entity recognition, safety classification, object detection, saliency, aesthetics, and fingerprinting.
+description: Every Apple device has a group of offline neural network models that perform various offline classification tasks. In this post, we reverse engineer one of their safety models, SafetyNetLight, and discover a parent model, SceneNetv5, which produces embeddings for scene classification, entity recognition, safety classification, object detection, and more.
 tags: ["reverse-engineering", "apple"]
 published: true
 ---

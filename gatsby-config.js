@@ -58,6 +58,10 @@ module.exports = {
                             aliases: {
                                 sh: "bash",
                                 zsh: "bash",
+                                "bash command": "bash",
+                                "bash output": "bash",
+                                "bashcommand": "bash",
+                                "bashoutput": "bash",
                             },
                             showLineNumbers: false,
                             noInlineHighlight: false,
@@ -146,6 +150,19 @@ module.exports = {
                         title: "hacked.codes",
                     },
                 ],
+            },
+        },
+        {
+            resolve: `gatsby-plugin-google-gtag`,
+            options: {
+                trackingIds: [`G-SM9F2HGDV4`],
+                gtagConfig: {
+                    anonymize_ip: true,
+                },
+                pluginConfig: {
+                    head: false,
+                    respectDNT: true,
+                },
             },
         },
         {

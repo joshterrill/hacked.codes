@@ -55,7 +55,7 @@ const Bio = () => {
                 </a>
                 .
                 <br />
-                Click <a href="/contact.txt">here</a> for contact info.
+                <a href="/contact.txt">Contact me via email.</a>
             </p>
         </div>
     );
