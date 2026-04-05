@@ -4,4 +4,4 @@
 
 [build.environment]
   GATSBY_CPU_COUNT = "2"
-  NODE_VERSION = "18"
+  NODE_VERSION = "22"
