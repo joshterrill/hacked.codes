@@ -58,10 +58,6 @@ module.exports = {
                             aliases: {
                                 sh: "bash",
                                 zsh: "bash",
-                                "bash command": "bash",
-                                "bash output": "bash",
-                                "bashcommand": "bash",
-                                "bashoutput": "bash",
                             },
                             showLineNumbers: false,
                             noInlineHighlight: false,
