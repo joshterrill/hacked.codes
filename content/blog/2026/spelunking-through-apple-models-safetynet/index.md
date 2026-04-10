@@ -333,7 +333,7 @@ The image classification flow is as follows:
 
 # Parsing the weights
 
-We observed in the net files the following fields related to the weights across multiple layers, here's an example from the first convolution layer:
+We observed the following fields related to the weights across multiple layers in the net files. Here's an example from the first convolution layer:
 
 ```json
 "quantization_lut_weights_blob" : 3,
@@ -345,7 +345,7 @@ This tells us that the weights are stored in quantized format, with lookup table
 1. **Weights blob (id=3):** Contains uint8 indices (1 byte per weight)
 2. **Ranges blob (id=5):** Contains float32 range values for dequantization
 
-I didn't know how to convert the uint8 indices back to float32 weights, so I had to do some experimentation to figure out the correct dequantization formula. I found some documentation on specific [Apple algorithms](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html) but didn't find any specific information on how the LUT quantization works. I tried a few different formulas based on common quantization schemes, but only one of them produced results that made sense given the values in the ranges blob. With some Codex help, I found the correct one which ended up matching [TensorFlowLite's quantization](https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec).
+I found some documentation on specific [Apple quantization algorithms](https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html) but didn't find any specific information on how the LUT quantization works. I tried a few different formulas based on common quantization schemes, but only one of them produced results that made sense given the values in the ranges blob. With some help from Codex, I found [TensorFlowLite's quantization spec](https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec) which matched the pattern I was seeing in the ranges blob.
 
 To verify, I looked at the final classifier layer (512 -> 10), which had only 20 range values for 10 output channels:
 
@@ -423,12 +423,11 @@ There were 6 classifier heads found in the SceneNetv5 model, we can convert all 
 Here are the classifier heads I found in `scenenet_v5_custom_classifiers/`:
 
 <table border="1" cellpadding="5" cellspacing="0">
-<thead align="left"><tr>
+<tr align="left">
 <th>Head</th>
 <th>Output Size</th>
 <th>Purpose</th>
-</tr></thead>
-<tbody>
+</tr>
 <tr>
 <td>SafetyNetLight</td>
 <td>10</td>
@@ -459,7 +458,6 @@ Here are the classifier heads I found in `scenenet_v5_custom_classifiers/`:
 <td>2</td>
 <td>Food vs landscape</td>
 </tr>
-</tbody>
 </table>
 
 To convert them all:

@@ -203,6 +203,10 @@ function areAdjacent(elem1, elem2) {
     return newlineCount <= 1;
 }
 
+function lineEndsWithShellContinuation(line) {
+    return /\\\s*$/.test(line);
+}
+
 function groupCommandsByIndentation(lines) {
     const commands = [];
     let currentCommand = null;
@@ -213,9 +217,11 @@ function groupCommandsByIndentation(lines) {
     
     lines.forEach(line => {
         const trimmedLine = line.trim();
+        // Strip trailing `\` so `do \` / `then \` still register as block starters
+        const lineForStructure = trimmedLine.replace(/\\\s*$/, '');
         const isIndented = /^[\s\t]/.test(line);
-        const startsBlock = shellBlockStart.test(trimmedLine);
-        const endsBlock = shellBlockEnd.test(trimmedLine);
+        const startsBlock = shellBlockStart.test(lineForStructure);
+        const endsBlock = shellBlockEnd.test(lineForStructure);
         
         if (shellBlockDepth > 0) {
             currentCommand.lines.push(line);
@@ -225,6 +231,23 @@ function groupCommandsByIndentation(lines) {
                 shellBlockDepth++;
             }
             if (endsBlock) {
+                shellBlockDepth--;
+                if (shellBlockDepth === 0) {
+                    commands.push(currentCommand);
+                    currentCommand = null;
+                }
+            }
+        } else if (
+            currentCommand &&
+            currentCommand.lines.length > 0 &&
+            lineEndsWithShellContinuation(currentCommand.lines[currentCommand.lines.length - 1])
+        ) {
+            currentCommand.lines.push(line);
+            currentCommand.fullText += '\n' + line;
+            if (startsBlock) {
+                shellBlockDepth++;
+            }
+            if (endsBlock && shellBlockDepth > 0) {
                 shellBlockDepth--;
                 if (shellBlockDepth === 0) {
                     commands.push(currentCommand);
@@ -298,7 +321,6 @@ function renderCommandWithOutput(content, commandCode, outputCode) {
             lineDiv.className = 'terminal-line command';
             
             const isFirstLine = lineIndex === 0;
-            const isIndented = /^[\s\t]/.test(line);
             
             if (isFirstLine) {
                 lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
@@ -311,11 +333,8 @@ function renderCommandWithOutput(content, commandCode, outputCode) {
                     copyToClipboard(command.fullText, copyBtn);
                 };
                 lineDiv.appendChild(copyBtn);
-            } else if (isIndented) {
-                lineDiv.innerHTML = `<span class="terminal-prompt continuation"></span><span class="terminal-command continuation">${escapeHtml(line)}</span>`;
             } else {
-                lineDiv.classList.add('no-prompt');
-                lineDiv.innerHTML = `<span class="terminal-command">${escapeHtml(line)}</span>`;
+                lineDiv.innerHTML = `<span class="terminal-prompt continuation"></span><span class="terminal-command continuation">${escapeHtml(line)}</span>`;
             }
             
             commandWrapper.appendChild(lineDiv);
@@ -368,7 +387,6 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
                 lineDiv.className = 'terminal-line command';
                 
                 const isFirstLine = lineIndex === 0;
-                const isIndented = /^[\s\t]/.test(line);
                 
                 if (isFirstLine) {
                     lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
@@ -381,11 +399,8 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
                         copyToClipboard(command.fullText, copyBtn);
                     };
                     lineDiv.appendChild(copyBtn);
-                } else if (isIndented) {
-                    lineDiv.innerHTML = `<span class="terminal-prompt continuation"></span><span class="terminal-command continuation">${escapeHtml(line)}</span>`;
                 } else {
-                    lineDiv.classList.add('no-prompt');
-                    lineDiv.innerHTML = `<span class="terminal-command">${escapeHtml(line)}</span>`;
+                    lineDiv.innerHTML = `<span class="terminal-prompt continuation"></span><span class="terminal-command continuation">${escapeHtml(line)}</span>`;
                 }
                 
                 commandWrapper.appendChild(lineDiv);
