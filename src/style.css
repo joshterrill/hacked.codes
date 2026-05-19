@@ -168,10 +168,10 @@ h6>a {
 /* Prose */
 
 p {
-    line-height: var(--lineHeight-relaxed);
+    line-height: var(--lineHeight-normal);
     --baseline-multiplier: 0.179;
     --x-height-multiplier: 0.35;
-    margin: var(--spacing-0) var(--spacing-0) var(--spacing-6) var(--spacing-0);
+    margin: var(--spacing-0) var(--spacing-0) var(--spacing-2) var(--spacing-0);
     padding: var(--spacing-0);
 }
 
@@ -189,8 +189,13 @@ ol {
 ul li,
 ol li {
     padding-left: var(--spacing-0);
-    margin-bottom: calc(var(--spacing-6) / 2);
+    margin-bottom: calc(var(--spacing-8) / 2);
     list-style-position: inside;
+}
+
+.article-body ul li,
+.article-body ol li {
+    margin-bottom: calc(var(--spacing-2) / 2);
 }
 
 li>p {

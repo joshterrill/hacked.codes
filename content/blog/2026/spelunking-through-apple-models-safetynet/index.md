@@ -1,7 +1,7 @@
 ---
 title: Spelunking through Apple's safety models - SafetyNetLight
 date: "2026-02-20T23:20:10.000Z"
-description: Every Apple device has a group of offline neural network models that perform various offline classification tasks. In this post, we reverse engineer one of their safety models, SafetyNetLight, and discover a parent model, SceneNetv5, which produces embeddings for scene classification, entity recognition, safety classification, object detection, and more.
+description: Every Apple device has several neural network models that perform various offline classification tasks. In this post, we reverse engineer one of their safety models, SafetyNetLight, and discover a parent model, SceneNetv5, which produces embeddings for scene classification, entity recognition, safety classification, object detection, and more.
 tags: ["reverse-engineering", "apple"]
 published: true
 ---
@@ -14,7 +14,7 @@ They come in the form of *espresso models*, which usually consist of three files
 
 <div class="info-block info">
     <p>
-    <b>Info</b>  &rarr; When doing the original research on NeuralHash, all of the espresso files were plain JSON. This is true for any of the older models like pet classifier, sound classifier, etc. The newer espresso models in `CoreSceneUnderstanding.framework` use a different format entirely: a custom `pbze` header followed by an LZFSE compressed payload.<br>
+    <b>Info</b>  &rarr; When doing the original research on NeuralHash, all of the espresso files were plain JSON. This is true for any of the older models like pet classifier, sound classifier, etc. The newer espresso models in <code class="language-text">CoreSceneUnderstanding.framework</code> use a different format entirely: a custom <code class="language-text">pbze</code> header followed by an LZFSE compressed payload.<br>
     </p>
 </div>
 
