@@ -168,10 +168,10 @@ h6>a {
 /* Prose */
 
 p {
-    line-height: var(--lineHeight-normal);
+    line-height: var(--lineHeight-relaxed);
     --baseline-multiplier: 0.179;
     --x-height-multiplier: 0.35;
-    margin: var(--spacing-0) var(--spacing-0) var(--spacing-2) var(--spacing-0);
+    margin: var(--spacing-0) var(--spacing-0) var(--spacing-4) var(--spacing-0);
     padding: var(--spacing-0);
 }
 
@@ -442,7 +442,7 @@ a:focus {
 .terminal-title {
     font-family: 'Source Code Pro', monospace;
     font-size: 10px;
-    text-transform: uppercase;
+    text-transform: none;
     letter-spacing: 0.15em;
     font-weight: 600;
     color: #666;
@@ -721,8 +721,9 @@ a:focus {
    -------------------------------------------------------------------------- */
 
 :not(pre) > code {
-    background: #1a1a1a !important;
+    background: #4a4a4a !important;
     color: #f7f7f7 !important;
+    border-radius: 4px !important;
     padding: 0.15em 0.4em;
     border-radius: 0;
     font-size: 0.9em;
@@ -795,6 +796,12 @@ a code {
     background-color: #f7eded;
     color: #671a1a;
     border-left: solid #967171 4px;
+}
+
+.info-block.warning {
+    background-color: #fffaf0;
+    color: #665c00;
+    border-left: solid #ffcc00 4px;
 }
 
 .article-body img {

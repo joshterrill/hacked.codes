@@ -29,6 +29,7 @@
     "gatsby-remark-autolink-headers": "^6.16.0",
     "gatsby-remark-copy-linked-files": "^6.16.0",
     "gatsby-remark-embed-gist": "^1.2.1",
+    "gatsby-remark-flowchart": "^0.0.1",
     "gatsby-remark-highlight-code": "^3.3.0",
     "gatsby-remark-images": "^7.16.0",
     "gatsby-remark-prismjs": "^7.16.0",

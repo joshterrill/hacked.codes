@@ -101,7 +101,7 @@ function enhanceCodeBlocks() {
             }
             
             if (pairs.length > 0) {
-                enhanceTerminalBlockWithPairs(highlight, pairs);
+                enhanceTerminalBlockWithPairs(highlight, pairs, blockType);
                 
                 // Mark all collected blocks as enhanced and hide non-first ones
                 pairs.forEach((pair, pairIndex) => {
@@ -118,19 +118,19 @@ function enhanceCodeBlocks() {
             }
             
             highlight.classList.add('enhanced');
-            enhanceTerminalBlock(highlight, pre, code, 'bash', true);
+            enhanceTerminalBlock(highlight, pre, code, blockType, true);
             continue;
         }
         
         if (blockType.type === 'output') {
             highlight.classList.add('enhanced');
-            enhanceTerminalBlock(highlight, pre, code, 'bash', false);
+            enhanceTerminalBlock(highlight, pre, code, blockType, false);
             continue;
         }
         
         if (isTerminalLanguage(blockType.baseLang)) {
             highlight.classList.add('enhanced');
-            enhanceTerminalBlock(highlight, pre, code, blockType.baseLang, true);
+            enhanceTerminalBlock(highlight, pre, code, blockType, true);
             continue;
         }
 
@@ -149,29 +149,55 @@ function getLanguage(pre, highlight) {
 }
 
 function getBlockType(language) {
-    const lang = language.toLowerCase();
-    
-    if (lang.endsWith('command') || lang.endsWith('cmd')) {
-        const baseLang = lang.replace(/command$|cmd$/, '') || 'bash';
-        return { baseLang, type: 'command' };
+    const trimmedLanguage = (language || '').trim();
+    const lang = trimmedLanguage.toLowerCase();
+
+    const terminalMatch = trimmedLanguage.match(/^(.*?)(?:[-\s])?(command|cmd|output|out)(?:\s+(.*))?$/i);
+    if (terminalMatch) {
+        const baseLang = terminalMatch[1].trim() || 'bash';
+        const typeToken = terminalMatch[2].toLowerCase();
+        const modifiers = parseTerminalModifiers(terminalMatch[3] || '');
+        return {
+            baseLang,
+            type: typeToken === 'output' || typeToken === 'out' ? 'output' : 'command',
+            promptOverride: modifiers.promptOverride,
+            headerOverride: modifiers.headerOverride,
+        };
     }
-    if (lang.endsWith('output') || lang.endsWith('out')) {
-        const baseLang = lang.replace(/output$|out$/, '') || 'bash';
-        return { baseLang, type: 'output' };
+
+    return {
+        baseLang: lang || 'text',
+        type: 'normal',
+        promptOverride: null,
+        headerOverride: null,
+    };
+}
+
+function parseTerminalModifiers(modifiersText) {
+    const modifiers = (modifiersText || '').trim();
+    if (!modifiers) {
+        return { promptOverride: null, headerOverride: null };
     }
-    
-    const parts = lang.split(/[\s-]+/);
-    if (parts.length > 1) {
-        const baseLang = parts[0];
-        if (parts.includes('command') || parts.includes('cmd')) {
-            return { baseLang, type: 'command' };
-        }
-        if (parts.includes('output') || parts.includes('out')) {
-            return { baseLang, type: 'output' };
-        }
+
+    const parts = modifiers.split(/\s+/).filter(Boolean);
+    const promptToken = parts[0] || '';
+
+    if (promptToken === '$') {
+        return {
+            promptOverride: null,
+            headerOverride: parts.slice(1).join(' ').trim() || null,
+        };
     }
-    
-    return { baseLang: lang, type: 'normal' };
+
+    return {
+        promptOverride: promptToken && promptToken !== '$' ? promptToken : null,
+        headerOverride: parts.slice(1).join(' ').trim() || null,
+    };
+}
+
+function getTerminalHeaderText(blockType) {
+    const typeText = blockType.headerOverride?.toUpperCase() || blockType?.baseLang?.toUpperCase();
+    return `Terminal - ${typeText}`;
 }
 
 function isTerminalLanguage(lang) {
@@ -278,7 +304,7 @@ function groupCommandsByIndentation(lines) {
     return commands;
 }
 
-function enhanceTerminalBlockWithPairs(highlight, pairs) {
+function enhanceTerminalBlockWithPairs(highlight, pairs, blockType) {
     const wrapper = document.createElement('div');
     wrapper.className = 'terminal-block';
     
@@ -290,14 +316,14 @@ function enhanceTerminalBlockWithPairs(highlight, pairs) {
             <span class="terminal-btn yellow"></span>
             <span class="terminal-btn green"></span>
         </div>
-        <span class="terminal-title">Terminal - Bash</span>
+        <span class="terminal-title">${escapeHtml(getTerminalHeaderText(blockType))}</span>
     `;
     
     const content = document.createElement('div');
     content.className = 'terminal-content';
     
     pairs.forEach(pair => {
-        renderCommandWithOutput(content, pair.commandCode, pair.outputCode);
+        renderCommandWithOutput(content, pair.commandCode, pair.outputCode, blockType);
     });
     
     wrapper.appendChild(header);
@@ -307,7 +333,7 @@ function enhanceTerminalBlockWithPairs(highlight, pairs) {
     highlight.appendChild(wrapper);
 }
 
-function renderCommandWithOutput(content, commandCode, outputCode) {
+function renderCommandWithOutput(content, commandCode, outputCode, blockType) {
     const commandText = commandCode.textContent || commandCode.innerText;
     const commandLines = commandText.split('\n').filter(line => line.trim().length > 0);
     const groupedCommands = groupCommandsByIndentation(commandLines);
@@ -323,7 +349,8 @@ function renderCommandWithOutput(content, commandCode, outputCode) {
             const isFirstLine = lineIndex === 0;
             
             if (isFirstLine) {
-                lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
+                const promptText = blockType.promptOverride || '$';
+                lineDiv.innerHTML = `<span class="terminal-prompt">${escapeHtml(promptText)}</span><span class="terminal-command">${escapeHtml(line)}</span>`;
                 
                 const copyBtn = document.createElement('button');
                 copyBtn.className = 'terminal-copy-btn';
@@ -354,7 +381,7 @@ function renderCommandWithOutput(content, commandCode, outputCode) {
     }
 }
 
-function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) {
+function enhanceTerminalBlock(highlight, pre, code, blockType, isCommand = true) {
     const wrapper = document.createElement('div');
     wrapper.className = 'terminal-block';
     
@@ -366,7 +393,7 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
             <span class="terminal-btn yellow"></span>
             <span class="terminal-btn green"></span>
         </div>
-        <span class="terminal-title">Terminal - Bash</span>
+        <span class="terminal-title">${escapeHtml(getTerminalHeaderText(blockType))}</span>
     `;
     
     const content = document.createElement('div');
@@ -389,7 +416,8 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
                 const isFirstLine = lineIndex === 0;
                 
                 if (isFirstLine) {
-                    lineDiv.innerHTML = `<span class="terminal-prompt">$</span><span class="terminal-command">${escapeHtml(line)}</span>`;
+                    const promptText = blockType.promptOverride || '$';
+                    lineDiv.innerHTML = `<span class="terminal-prompt">${escapeHtml(promptText)}</span><span class="terminal-command">${escapeHtml(line)}</span>`;
                     
                     const copyBtn = document.createElement('button');
                     copyBtn.className = 'terminal-copy-btn';
@@ -402,7 +430,7 @@ function enhanceTerminalBlock(highlight, pre, code, language, isCommand = true) 
                 } else {
                     lineDiv.innerHTML = `<span class="terminal-prompt continuation"></span><span class="terminal-command continuation">${escapeHtml(line)}</span>`;
                 }
-                
+
                 commandWrapper.appendChild(lineDiv);
             });
             
