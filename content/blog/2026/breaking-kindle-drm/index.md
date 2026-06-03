@@ -8,9 +8,9 @@ published: true
 
 # Preface
 
-The only reason why I've decided to take this project on is because I purchased an expensive technical book on Kindle that I later discovered isn't able to be viewed on my Kindle. I thought this was extremely annoying, especially because I knew it was probably some sort of PDF that was wrapped in DRM. Being someone who uses his Kindle a lot, and
+The only reason why I've decided to take this project on is because I purchased an expensive technical book on Kindle that I later discovered isn't able to be viewed on my Kindle. I thought this was extremely annoying and decided to reverse engineer the DRM book so I can read my Kindle book on my Kindle.
 
-Kindle version: `Version 7.58 (1.437344.10)`
+For reference, I am using the Kindle App version: `Version 7.58 (1.437344.10)` on an Apple Silicon macOS `26.5`. All of the reverse engineering is done in `x86_64`, which I will explain later. I have also opted to obfuscate the keys and any identifiers that I believe could be used to identify the account I was using to test.
 
 
 # The Kindle filesystem
@@ -162,7 +162,7 @@ SELECT * FROM Z_MODELCACHE;
 }Vyp^TU^ZgC��΄
 ```
 
-This gives us some semantic names that we can try to search the binary for later:
+This gives us some strings we can search for in the binary later:
 
 - `DRM_VOUCHER`
 - `KINDLE_MAIN_BASE`
@@ -275,7 +275,7 @@ ClippingLimit
 TextToSpeechDisabled
 ```
 
-And the *.md, *.res, and *.azw8 files look like they are the actual encrypted book content, each having magic bytes of `ea44 524d 494f 4eee` which spells out `.DRMION`. 
+The *.md, *.res, and *.azw8 files look like they are the actual encrypted book content, each having magic bytes of `ea44 524d 494f 4eee` which is `.DRMION`. 
 
 Before this, I've never heard of "ion" before, but it seems to be a [proprietary format that Amazon uses](https://amazon-ion.github.io/ion-docs/). From their docs:
 
@@ -287,11 +287,11 @@ I read a lot about the Ion format...
 
 - Ion symbols and symbol tables: https://amazon-ion.github.io/ion-docs/docs/symbols.html
 
-<TODO: maybe add more about the Ion format here, and how it relates to the Kindle DRM>
+I'm already cringing at the thought of having to implement a parser for this... more on that later.
 
 # Static analysis
 
-The Kindle app on macOS has two different versions of the executable, one for Apple Silicon (arm64) and one for Intel (x86_64).
+The Kindle app on macOS ships with both Apple Silicon (arm64) and Intel (x86_64) binaries.
 
 ```bash command
 file /Applications/Kindle.app/Contents/MacOS/Kindle
@@ -304,7 +304,7 @@ file /Applications/Kindle.app/Contents/MacOS/Kindle
 
 Even though I'm on an Apple Silicon machine, I decided to analyze the x86_64 version of the binary because I am more familiar with that instruction set.
 
-I extracted the x86_64 version of the binary using `lipo`:
+I extracted the x86_64 version of the binary using [`lipo`](https://ss64.com/mac/lipo.html):
 
 ```bash command
 lipo -thin x86_64 /Applications/Kindle.app/Contents/MacOS/Kindle -output Kindle_x86_64
@@ -320,7 +320,7 @@ Then loaded it into IDA.
 
 Searching for `DRM_VOUCHER` seemed like a good place to start with static analysis, we find that it's referenced in one place that seems promising:
 
-```c
+```nasm
 __text:00000001017EAA08 ; id __cdecl -[KfxBook createDrmData](KfxBook *self, SEL)
 __text:00000001017EAA08 __KfxBook_createDrmData_ proc near      ; DATA XREF: __objc_const:00000001060D2BE0↓o
 __text:00000001017EAA08
@@ -345,7 +345,7 @@ __text:00000001017EAA08                 push    rbp
 
 This section of decompiled code looks promising:
 
-![decompilation of createDrmData](create-drm-decompiled.png)
+![decompilation of createDrmData](./assets/create-drm-decompiled.png)
 
 This code shows us that the voucher alone is likely not enough to decrypt the book, but a key is possibly derived from an some account secrets, a kindle serial number (DSN), and the voucher file. These are put into a `KRFDRMDataProvider` object.
 
@@ -367,17 +367,17 @@ objc_msgSend(allocatedProvider,
 
 This might be enough to go on, but one thing I usually like to do is look for error cases related to the feature I'm analyzing. This can give us more clues about how it works and what the inputs are validated against. Going back to the *Strings* tab in IDA, we can search for **DRM**:
 
-![drm error messages in the binary](error-messages.png)
+![drm error messages in the binary](./assets/error-messages.png)
 
 We are eventually brought to `sub_1016A3A20` which shows a large switch statement in the decompiler:
 
-![drm error switch statement](error-switch-statement.png)
+![drm error switch statement](./assets/error-switch-statement.png)
 
 And to give you an idea of how large this function is, here is the graph view showing all 75 cases in the switch statement:
 
-![drm error switch statement graph view](error-graph.png)
+![drm error switch statement graph view](./assets/error-graph.png)
 
-Reading the error messages in order shows us a "fail fast" approach to DRM validation. Some specific error messages stand out as being very useful, related to AES decryption and HMAC validation:
+Reading the error messages in order shows us a "fail fast" approach to DRM validation. We see some specific error messages around HMAC validation, which match the voucher encryption metadata we saw before.
 
 ```c
 case 68:
@@ -387,19 +387,19 @@ case 68:
   strcpy(*(char **)&v13[1], "HMAC message generation failed during DRM operations");
   sub_100448380(a1, 37, v13);
   goto LABEL_39;
-// ...
-<<TODO: where do we find AES decrypt failures in the error messages? add them here>>
 ```
 
 Based on what we've learned up until now, a few things seem to be true:
 
-1. The key to decrypt the book is based on account secrets, the kindle serial number (device serial number aka dsn), and the voucher file.
+1. The key to decrypt the book is based on account secrets, the kindle serial number (device serial number aka DSN), and the voucher file.
 2. The book is decrypted in "pages" rather than all at once.
-3. The decryption process involves both AES and HMAC
+3. The decryption process involves both AES + HMAC
 
-I started looking for AES-related strings and found one that looked promising: `_EVP_aes_128_cbc` which is used in `sub_1005B75F0`. In the decompiled code, we see a setup for what looks like AES-128-CBC decryption:
+I started looking for AES-related strings and found one that looked promising: `_EVP_aes_128_cbc` which is used in `sub_1005B75F0`. In the decompiled code, we a setup for  AES-128-CBC decryption:
 
-![aes-128-cbc setup](aes-cbc-flow.png)
+![aes-128-cbc setup](./assets/aes-cbc-flow.png)
+
+The code looks like this after being decompiled and renamed:
 
 ```c
 ctx    = EVP_CIPHER_CTX_new();
@@ -411,7 +411,7 @@ EVP_CIPHER_CTX_free(ctx);
 
 `sub_1005B75F0` is never called directly because it's a vtable, only referenced through the `+0x10` slot of `off_105CC1910`:
 
-```text
+```nasm
 off_105CC1910 + 0x00  ->  sub_1005B7A60
 off_105CC1910 + 0x08  ->  sub_1005B7A70
 off_105CC1910 + 0x10  ->  sub_1005B75F0   ; our AES-128-CBC function
@@ -421,14 +421,13 @@ off_105CC1910 + 0x20  ->  sub_1005B7A90
 
 This vtable is installed by `sub_1005A7710`, but only in one branch: when the requested adapter type is `0x45`. `sub_1005A7710` is called from `sub_1005D0320`, a small state machine that caches a chunk of source bytes, builds the `0x45` adapter, calls it, and installs the result into a buffer that a range-read callback in `sub_1005CFAB0` later serves to the reader. This confirms that this AES function is not some generic crypto function, but is actually the per-page content decryption we've been looking for.
 
-![aes decrypt update and final](aes-plaintext.png)
+![aes decrypt update and final](./assets/aes-plaintext.png)
 
-But notice what `sub_1005B75F0` does **not** contain: a key. The key arrives as `arg2` (`rsi`) — it is computed *before* this function runs and is never stored as a constant in the binary. The error strings already told us why: there is a `shared secret`, an `HMAC`, and a `digest` stage producing it. Reconstructing that entire derivation statically would be a project of its own, and I didn't actually need to. `sub_1005B75F0` is the one place where the finished key, the IV, and the ciphertext all sit in registers at the same instant. So instead of *deriving* the key, I could break on this function at runtime and read it straight out of `rsi`.
-That is where static analysis ends and dynamic analysis begins.
+`sub_1005B75F0` unfortunately does not contain the key, and we're starting to get into annoying vtable and callback functions... so this is a good time to swtich to dynamic analysis.
 
 # Dynamic analysis
 
-Since we have a pretty good idea of where the page-level decryption happens, we can set a breakpoint on `sub_1005B75F0` and read the key out of `rsi` when it hits. I used LLDB for this:
+Since we have a pretty good idea of where the page-level decryption happens, we can set a breakpoint on `sub_1005B75F0` and read the key out of `rsi` when it hits. I used LLDB for debugging.
 
 <div class="info-block warning">
     <p>
@@ -450,7 +449,7 @@ breakpoint command add 1
 ```bash output
 > memory read -s1 -fx -c16 $rsi   ; 16-byte AES key
 > memory read -s1 -fx -c16 $rcx   ; 16-byte IV
-> memory read -s1 -fx -c16 $r9    ; 16 bytes of ciphertext (first block of the page)
+> memory read -s1 -fx -c16 $rdi    ; 16 bytes of ciphertext (first block of the page)
 > continue
 > DONE
 ```
@@ -463,17 +462,249 @@ I started paging through the book and the breakpoint fired almost immediately, p
 ```text
 0x600001e40d80: 36 d7 ec 5f fe 92 a7 3a f3 de c8 1b 29 9e 30 0a   ; rsi (key)
 0x600001ef8330: 8a d8 06 43 fa d0 05 b2 db f7 02 90 67 c3 12 b0   ; rcx (iv)
-0x7ff66f8a4fd0: b2 85 5c 76 1b 6e 71 5b 15 38 29 70 ce 4d d9 4d   ; r9 (ciphertext)
+0x7ff66f8a4fd0: b2 85 5c 76 1b 6e 71 5b 15 38 29 70 ce 4d d9 4d   ; rdi (ciphertext)
 ```
 
 Now we have the AES key, the IV, and some ciphertext.
 
 I was curious if the key or IV actually show up in any of the files: I didn't find the key, but the IV shows up in the .awz8 file:
 
-![IV in the .awz8 file](found-iv-in-awz8.png)
+![IV in the .awz8 file](./assets/found-iv-in-awz8.png)
 
-# The annoying part - decoding the Ion format
+# The annoying part: decoding the Ion format
+
+Ion binary is a [*type-length-value*](https://en.wikipedia.org/wiki/Type%E2%80%93length%E2%80%93value) format. Every value starts with a single byte that encodes both the type and the length.
+
+We only need three types for this:
+
+```text
+0xD   struct       (a set of field-name -> value pairs)
+0xE   annotation   (a value with one or more labels attached to it)
+0xA   blob         (raw bytes)
+```
+
+And two encoding rules cover everything we'll run into:
+
+- If the low nibble is `0xE`, the real length didn't fit in a nibble, so it's stored in the next byte(s) as a variable-length integer. For small numbers that's a single byte with its high bit set as a terminator, so you just mask it off: `0x90 & 0x7f = 0x10 = 16`.
+- Larger integers use 7 bits per byte and set the high bit only on the final byte, so `06 e0` decodes as `(0x06 << 7) | (0xe0 & 0x7f) = 864`.
+
+All of this is incredibly boring and tedious, and there are libraries out there that do this for you, but I wanted to understand the format well enough to be able to write my own parser.
+
+Here are the first bytes of one protected record in the `.azw8`:
+
+```text
+00080a23: ee 07 81 81 c5 de 06 fc 95 ee 06 e5 81 c8 ae 06
+00080a33: e0 b2 85 5c 76 ...
+```
+
+Applying the rules above, byte by byte:
+
+```text
+ee 07 81      annotation, length 897             (a label wrapping the whole record)
+   81 c5         one label, symbol id 0x45 = 69    -> sid::69
+de 06 fc      struct, length 892
+   95            field name 0x95 -> mask -> 21     -> sid::21
+   ee 06 e5      annotation, length 869
+      81 c8         one label, symbol id 0x48 = 72 -> sid::72
+   ae 06 e0      blob, length 864                  <- ciphertext
+   b2 85 5c 76 ...   (the 864 ciphertext bytes)
+```
+
+And here are the bytes at the *end* of that same struct, where its second field lives:
+
+```text
+00080d90: 28 04 1a bc 96 ae 90 8a d8 06 43 fa d0 05 b2 db
+00080da0: f7 02 90 67 c3 12 b0 ee
+```
+
+```text
+... 28 04 1a bc     (last 4 bytes of the 864-byte ciphertext)
+96               field name 0x96 -> mask -> 22    -> sid::22
+ae 90            blob, length 16                   <- IV
+8a d8 06 43 fa d0 05 b2 db f7 02 90 67 c3 12 b0    (the 16-byte IV)
+ee               (start of the next record)
+```
+
+Two things are worth pausing on. First, the blob under `sid::22` is exactly `8a d8 06 43 ...`, which is the IV we captured at the breakpoint. The blob under `sid::21` starts `b2 85 5c 76 ...` is the ciphertext we captured. Now we can know the exact structure of the record we're looking at:
+
+```text
+sid::69 annotation
+  struct
+    sid::21 -> ciphertext (blob, length is always a multiple of 16)
+    sid::22 -> 16-byte IV
+```
+
+So the IV we captured is only the IV for that one record, not the whole book. This makes sense in retrospect based on what we were seeing in the static analysis section.
+
+I found [`amazon-ion`](https://github.com/amzn/ion-python) will do most of this parsing for us, but there are a few caveats:
+
+1. The `.azw8` has a few junk bytes after the last real Ion value. `ion.loads` is eager, so it insists on consuming the entire buffer. It reads into that padding and throws `IERR_UNEXPECTED_EOF`. The fix is to parse the largest valid prefix instead of the whole file.
+2. `amazon-ion` returns structs as an `IonPyDict`, which is *not* a `dict` subclass, so `isinstance(x, dict)` skips every struct. So we use `hasattr(x, "items")` instead.
+3. The field names live in a private `ProtectedData` symbol table that isn't in the file, so every field name comes back blank. That means we can't ask the parser for "field 21". We have to match records by a struct that contains a 16-byte blob (the IV) and a larger multiple-of-16 blob (the ciphertext).
+
+Here is the full decoder script:
+
+```python
+import amazon.ion.simpleion as ion
+
+def load_ion_prefix(buf, max_trim=64):
+    last = None
+    for cut in range(len(buf), len(buf) - max_trim, -1):
+        try:
+            return ion.loads(buf[:cut], single_value=False)
+        except Exception as e:
+            last = e
+    raise last
+
+def is_struct(o):
+    return hasattr(o, "items") and not isinstance(o, (str, bytes, bytearray))
+
+def find_records(o, out):
+    if is_struct(o):
+        blobs = [bytes(v) for _, v in o.items() if isinstance(v, (bytes, bytearray))]
+        iv = [x for x in blobs if len(x) == 16]
+        ct = [x for x in blobs if len(x) > 16 and len(x) % 16 == 0]
+        if iv and ct:
+            out.append((ct[0], iv[0])) # (ciphertext, iv)
+        for _, v in o.items():
+            find_records(v, out)
+    elif isinstance(o, (list, tuple)):
+        for v in o:
+            find_records(v, out)
+```
+
+And running it over the `.azw8` (skipping the `DRMION` header to the Ion version marker) gives us every encrypted record:
+
+```python
+data = open("CR!VRSRH5SH5H04V1VA0863TECAY9DA.azw8", "rb").read()
+values = load_ion_prefix(data[data.find(b"\xe0\x01\x00\xea"):])
+
+records = []
+for v in values:
+    find_records(v, records)
+
+print(len(records), "records") # 185 records
+```
 
 # Decrypting the book content
 
+Now we have the records, we can decrypt them via AES-128-CBC with the captured key and each record's own IV, then strip the PKCS#7 padding.
+
+```python
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from ion_decode import load_ion_prefix, find_records
+
+KEY  = bytes.fromhex("36d7ec5ffe92a73af3dec81b299e300a")
+data = open("CR!VRSRH5SH5H04V1VA0863TECAY9DA.azw8", "rb").read()
+
+records = []
+for v in load_ion_prefix(data[data.find(b"\xe0\x01\x00\xea"):]):
+    find_records(v, records)
+
+plaintexts = []
+for ct, iv in records:
+    d  = Cipher(algorithms.AES(KEY), modes.CBC(iv)).decryptor()
+    pt = d.update(ct) + d.finalize()
+    pt = pt[:-pt[-1]] # strip PKCS#7 padding
+    plaintexts.append(pt)
+
+print(len(plaintexts), "records decrypted") # 185 records decrypted
+print("first 16 bytes:", plaintexts[0][:16].hex()) # first 16 bytes: 005d0000400000280000000000000000
+```
+
+The fact that the padding strips cleanly on every record means that the key is correct, but we still don't have plaintext yet. That `00 5d 00 00 40 00 ...` header shows a magic number `5d` is the [LZMA magic number](https://github.com/frizb/FirmwareReverseEngineering/blob/master/IdentifyingCompressionAlgorithms.md).
+
+So now we're left with this kind of understanding:
+
+```text
+byte 0       : 00              some sort of padding?
+bytes 1..5   : 5d 00 00 40 00  LZMA properties + dictionary size
+bytes 6..13  : 00 28 00 00 ... 8-byte little-endian uncompressed size (0x2800 = 10240)
+bytes 14..   : LZMA compressed stream
+```
+
+Each decrypted record is `0x00` followed by an ordinary `.lzma` blob. Now we can decompress one of these blocks:
+
+```python
+import lzma
+
+block = lzma.decompress(plaintexts[0][1:], format=lzma.FORMAT_ALONE)
+print(len(block), block[:4]) # 10240 b'CONT'
+```
+
+Only the first record starts with `CONT`; the rest are continuations of one larger container. So we expand every record and stitch them together in order:
+
+```python
+container = b"".join(
+    lzma.decompress(pt[1:], format=lzma.FORMAT_ALONE) for pt in plaintexts
+)
+
+open("book.cont", "wb").write(container)
+print("size:", len(container), "| magic:", container[:4]) # size: 1892969 | magic: b'CONT'
+```
+
+After AES decryption and LZMA decompression, the 185 protected records reassemble into a single ~1.9 MB `CONT` container. The DRM has been removed.
+
 # Putting it all together
+
+`CONT` is a container that contains a header, a directory of fixed-size entries, and a list of `ENTY` chunks that hold the actual content as embedded Ion structs. The header stores the payload base at bytes 6–7, and each 24-byte directory entry holds a relative `ENTY` offset and length (both little-endian, shifted left by 16 bits):
+
+```python
+data = open("book.cont", "rb").read()
+base = int.from_bytes(data[6:8], "little")
+
+pos, entries = 16, []
+while pos + 24 <= len(data):
+    rel = int.from_bytes(data[pos + 8 : pos + 16], "little") >> 16
+    ln  = int.from_bytes(data[pos + 16 : pos + 24], "little") >> 16
+    off = base + rel
+    if ln == 0 or data[off:off + 4] != b"ENTY":
+        break
+    entries.append((off, ln))
+    pos += 24
+
+print(len(entries), "ENTY records") # 1299 ENTY records
+```
+
+Each `ENTY` is a 10-byte header followed by more embedded Ion, and the visible book text lives in those structs.
+
+```python
+import re
+for s in re.findall(rb"[\x20-\x7e]{5,}", data)[:8]:
+    print(s.decode())
+    # Quantum Markets
+    # Physical Theory of
+    # Market Microstructure
+    # Jack Sarkissian
+    # Contents
+    # PART I. PRICE FORMATION MECHANISM
+    # ...
+```
+
+We finally have some plaintext from the book. But plaintext is not enough! The `ENTY` format also contains layout information and information about resources such as images, annotations, footnotes, etc.
+
+## Creating the final EPUB
+
+The `.azw8` file gives us the text, but the figures, images, equations, and page-faithful layout metadata aren't there, they live in the three `.azw9.res` files. These are also `DRMION` files with the same `sid::21`/`sid::22` record shape, and the AES key works on these, too. Decoded and reassembled the same way, their `CONT` containers hold not Ion text but embedded `PDF-1.7` files: 11 PDFs, 219 pages total, which matches the 219-page index table we saw earlier exactly.
+
+Rendering those PDF pages to images and wrapping them in a fixed-layout EPUB gives a visually faithful copy of the book. All of the code for this can be found in a Kindle de-DRM project that I created called Swindle: https://github.com/joshterrill/swindle
+
+![the final EPUB open outside of Kindle](./assets/final-epub.png)
+
+All of the steps for decoding and re-assembly the Ion records is as follows:
+
+```text
+.azw8  ->  Ion records (sid::21 ciphertext + sid::22 IV)
+       ->  AES-128-CBC  (AES key)
+       ->  LZMA decompress
+       ->  concatenate -> CONT container
+       ->  ENTY -> Ion -> text + layout
+
+.azw9.res   ->  AES key
+            ->  CONT
+            ->  embedded PDFs
+            ->  rendered pages
+            ->  EPUB
+```
+
+Now I have the Kindle book that I bought on my Kindle that I can actually finally read on my Kindle.
