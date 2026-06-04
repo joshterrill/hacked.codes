@@ -876,7 +876,7 @@ code[class*="language-"], pre[class*="language-"] {
     background: #4a4a4a !important;
     color: #f7f7f7 !important;
     font-family: Source Code Pro, monospace !important;
-    padding: 0.1rem 0.25rem !important;
+    padding: 0.1rem 0.4rem !important;
     border-radius: 4px !important;
     white-space: normal;
 }
@@ -885,4 +885,13 @@ a code.language-text {
     /* color: #4abfff !important; */
     color: #b7ffbd !important;
     /* text-decoration: underline !important; */
+}
+
+video {
+    margin: 10px 0;
+}
+
+.image-md-container {
+    max-width: 500px !important;
+    margin: 10px auto !important;
 }
