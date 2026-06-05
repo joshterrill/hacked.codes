@@ -759,8 +759,6 @@ The `.azw8` file gives us the text, but the figures, images, equations, and page
 
 Rendering those PDF pages to images and wrapping them in a fixed-layout EPUB gives a visually faithful copy of the book. All of the code for this can be found in a Kindle de-DRM project that I created called Swindle: https://github.com/joshterrill/swindle
 
-![the final EPUB open outside of Kindle](./assets/final-epub.png)
-
 Here are all of the steps for decoding and re-assembling the Ion records:
 
 ```text
