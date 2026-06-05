@@ -1,7 +1,7 @@
 ---
 title: "Breaking Kindle DRM"
 date: "2026-05-20T12:49:16.000Z"
-description: "Amazon's Kindle DRM is notoriously difficult to break. After spending a weekend working on reverse engineering how their voucher system works, I was able to free my Kindle books and read them on any device I want."
+description: "Amazon's Kindle DRM is notoriously annoying and difficult. After spending a weekend working reverse engineering each layer of the DRM protection and eventually figured out how to decrypt a Kindle book that I bought on my Kindle so I can convert it to EPUB and finally be able to read it on my Kindle. Yes, it's as ridiculous as it sounds."
 tags: ["reverse-engineering", "drm"]
 published: true
 ---
