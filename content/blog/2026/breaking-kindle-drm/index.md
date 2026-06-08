@@ -12,13 +12,7 @@ The only reason why I've decided to take this project on is because I purchased 
 
 <div class="info-block danger">
     <p>
-        <strong>Disclaimer</strong>  &rarr; This post is for educational purposes only. These methods will not let you pirate Kindle books. If that's where you're here for, you can stop reading now.
-    </p>
-</div>
-
-<div class="info-block info">
-    <p>
-        <strong>Info</strong>  &rarr; If you're looking for the code for this project and don't wish to read the full article, you can find it <a href="https://github.com/joshterrill/swindle">on my github</a>.
+        <strong>Disclaimer</strong>  &rarr; This post is for educational purposes only. If you're here to try to pirate Kindle books, go away.
     </p>
 </div>
 
@@ -300,7 +294,7 @@ The main book payload is split across a few different pieces.
 
 The `KINDLE_MAIN_BASE` via `.azw8`, and three `KINDLE_MAIN_ATTACHABLE` files via `.azw9.res` are wrapped in encrypted DRMION records. The `KINDLE_MAIN_METADATA` via `.azw9.md` is a plaintext container (`CONT`) file that has resource and metadata pointers.
 
-Before this, I've never heard of "ion" before, but it seems to be a [proprietary format that Amazon uses](https://amazon-ion.github.io/ion-docs/). From their docs:
+Before this, I've never heard of "ion" before, but it seems to be a [a custom format that Amazon developed](https://amazon-ion.github.io/ion-docs/). From their docs:
 
 > Amazon Ion is a richly-typed, self-describing, hierarchical data serialization format offering interchangeable binary and text representations. The text format (a superset of JSON) is easy to read and author, supporting rapid prototyping. The binary representation is efficient to store, transmit, and skip-scan parse. The rich type system provides unambiguous semantics for long-term preservation of data which can survive multiple generations of software evolution.
 
@@ -325,9 +319,7 @@ file /Applications/Kindle.app/Contents/MacOS/Kindle
 /Applications/Kindle.app/Contents/MacOS/Kindle (for architecture arm64):	Mach-O 64-bit executable arm64
 ```
 
-Even though I'm on an Apple Silicon machine, I decided to analyze the x86_64 version of the binary because I am more familiar with that instruction set.
-
-I extracted the x86_64 version of the binary using [`lipo`](https://ss64.com/mac/lipo.html):
+Even though I'm on an Apple Silicon machine, I decided to analyze the x86_64 version of the binary because I am more familiar with that instruction set. I extracted it via [`lipo`](https://ss64.com/mac/lipo.html):
 
 ```bash command
 lipo -thin x86_64 /Applications/Kindle.app/Contents/MacOS/Kindle -output Kindle_x86_64
@@ -337,7 +329,7 @@ Then loaded it into IDA.
 
 <div class="info-block info">
     <p>
-        <strong>Info</strong>  &rarr; All static analysis in this section is assuming a base address of <code>0x100000000</code>
+        <strong>Info</strong>  &rarr; All static analysis in this section assumes a base address of <code>0x100000000</code>
     </p>
 </div>
 
@@ -755,32 +747,12 @@ We finally have some plaintext from the book. But plaintext is not enough! The `
 
 ## Creating the final EPUB
 
-The `.azw8` file gives us the text, but the figures, images, equations, and page-faithful layout metadata aren't there, they live in the three `.azw9.res` files. These are also `DRMION` files with the same `sid::21`/`sid::22` record shape, and the AES key works on these, too. Decoded and reassembled the same way, their `CONT` containers hold not Ion text but embedded `PDF-1.7` files: 11 PDFs, 219 pages total.
+The `.azw8` file gives us the text, but the figures, images, equations, and page-faithful layout metadata aren't there, they live in the three `.azw9.res` files. These are also `DRMION` files with the same `sid::21`/`sid::22` record shape, and the AES key works on these, too. Decoded and reassembled the same way, their `CONT` containers embedded `PDF-1.7` files: 11 PDFs, 219 pages total.
 
-Rendering those PDF pages to images and wrapping them in a fixed-layout EPUB gives a visually faithful copy of the book. All of the code for this can be found in a Kindle de-DRM project that I created called Swindle: https://github.com/joshterrill/swindle
-
-Here are all of the steps for decoding and re-assembling the Ion records:
-
-```text
-.azw8  ->  Ion records (sid::21 ciphertext + sid::22 IV)
-       ->  AES-128-CBC  (AES key)
-       ->  LZMA decompress
-       ->  concatenate -> CONT container
-       ->  ENTY -> Ion -> text + layout
-
-.azw9.res   ->  AES key
-            ->  CONT
-            ->  embedded PDFs
-            ->  rendered pages
-            ->  EPUB
-```
+Rendering those PDF pages to images and wrapping them in a fixed-layout EPUB gives a visually faithful copy of the book.
 
 I generated the EPUB, sent it to my Kindle. Now I have the Kindle book that I bought on my Kindle that I can actually finally read on my Kindle.
 
 <div class="image-md-container">
     <img src="./assets/book-in-kindle.jpg" />
 </div>
-
-# Using Swindle
-
-All of this is implemented in a few scripts via a project I created called Swindle. You can find the source code here: https://github.com/joshterrill/swindle
