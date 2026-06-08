@@ -461,7 +461,7 @@ slide   = Kindle load address − 0x100000000
 runtime = static address + slide
 ```
 
-After attaching LLDB, get the load address from the Kindle module header (or let [Swindle](https://github.com/joshterrill/swindle) do it all for you via the `lldb_plugin.py` script).
+After attaching LLDB, get the load address from the Kindle module header.
 
 Here's an example from one Rosetta run. Your slide will differ each launch:
 
@@ -518,12 +518,6 @@ Here is a video of me showing this process on a random book:
   <source src="./assets/kindle.mov" type="video/mp4">
   Your browser does not support the video tag.
 </video>
-
-<div class="info-block info">
-    <p>
-        <strong>Swindle</strong> &rarr; <code>kindle_x86_aes_trace_install</code> sets the breakpoint at static <code>0x1005B7705</code>, applies the slide for you, and prints <code>AES_KEY=...</code> / <code>IV=...</code> when you turn pages.
-    </p>
-</div>
 
 And as expected, the IV we captured from LLDB is found inside the protected Ion record for that page in the `.azw8` file:
 
@@ -597,12 +591,6 @@ I found [`amazon-ion`](https://github.com/amzn/ion-python) will do most of this 
 1. The `.azw8` has a few junk bytes after the last real Ion value. `ion.loads` is eager, so it insists on consuming the entire buffer. It reads into that padding and throws `IERR_UNEXPECTED_EOF`. The fix is to parse the largest valid prefix instead of the whole file.
 2. `amazon-ion` returns structs as an `IonPyDict`, which is *not* a `dict` subclass, so `isinstance(x, dict)` skips every struct. So we use `hasattr(x, "items")` instead.
 3. The field names live in a private `ProtectedData` symbol table that isn't in the file, so every field name comes back blank. That means we can't ask the parser for "field 21". We have to match records by a struct that contains a 16-byte blob (the IV) and a larger multiple-of-16 blob (the ciphertext).
-
-<div class="info-block info">
-    <p>
-        <strong>Info</strong> &rarr; The Ion prefix trim, record matching, AES decrypt, LZMA expand, and <code>CONT</code> reassembly from this section and the next are implemented in <a href="https://github.com/joshterrill/swindle">Swindle</a> as <code>decode_book.py</code>. You only need the 32-character hex key from the LLDB step.
-    </p>
-</div>
 
 Here is the full decoder script:
 
