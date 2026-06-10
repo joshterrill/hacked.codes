@@ -1,7 +1,7 @@
 ---
 title: "Breaking Kindle DRM"
 date: "2026-06-04T01:05:37.000Z"
-description: "Amazon's Kindle DRM is notoriously annoying and difficult. After spending a weekend working reverse engineering each layer of the DRM protection and eventually figured out how to convert a Kindle book that I bought on my Kindle so I can convert it to a format that can be read on my Kindle. Yes, it's as ridiculous as it sounds."
+description: "Amazon's Kindle DRM is notoriously annoying and difficult. After spending a weekend working reverse engineering each layer of the DRM protection, I was able to figure out how to convert a Kindle book to a format that I can actually read on my Kindle. Yes, it's as ridiculous as it sounds."
 tags: ["reverse-engineering", "drm"]
 published: true
 ---

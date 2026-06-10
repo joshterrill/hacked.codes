@@ -822,8 +822,8 @@ code, pre {
 }
 
 .gatsby-resp-image-wrapper {
-    margin-top: var(--spacing-4) !important;
-    margin-bottom: var(--spacing-4) !important;
+    margin-top: var(--spacing-8) !important;
+    margin-bottom: var(--spacing-8) !important;
     max-width: 100% !important;
 }
 
@@ -893,5 +893,5 @@ video {
 
 .image-md-container {
     max-width: 500px !important;
-    margin: 10px auto !important;
+    margin: auto !important;
 }
