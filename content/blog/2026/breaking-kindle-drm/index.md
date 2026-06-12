@@ -419,7 +419,7 @@ In the decompiled code, we see a setup for AES-128-CBC decryption:
 ```c
 ctx    = EVP_CIPHER_CTX_new();
 cipher = EVP_aes_128_cbc();
-EVP_DecryptInit_ex(ctx, cipher, NULL, key, iv);   // key = arg2 (rsi)
+EVP_DecryptInit_ex(ctx, cipher, NULL, key, iv); // rdi=ctx, rsi=cipher, rdx=engine, rcx=key, r8=iv
 plaintext = sub_1006CF210(ctx, ciphertext, &len); // EVP_DecryptUpdate/Final wrapper
 EVP_CIPHER_CTX_free(ctx);
 ```
@@ -452,39 +452,48 @@ On x86_64, the `key` and `iv` pointers are in `rcx` and `r8`.
     </p>
 </div>
 
-## Static addresses vs runtime (ASLR slide)
+To start the Kindle app in Rosetta, run the following command:
 
-All addresses in the static analysis section assume a base of `0x100000000`. At runtime Kindle is relocated ([PIE](https://en.wikipedia.org/wiki/Position-independent_code)), so you must add a slide before setting a breakpoint:
-
-```text
-slide   = Kindle load address − 0x100000000
-runtime = static address + slide
+```bash command
+arch -x86_64 /Applications/Kindle.app/Contents/MacOS/Kindle
 ```
 
-After attaching LLDB, get the load address from the Kindle module header.
+And in another terminal, attach with `lldb`:
 
-Here's an example from one Rosetta run. Your slide will differ each launch:
+```bash command
+lldb -p $(pgrep -nf '/Applications/Kindle.app/Contents/MacOS/Kindle')
+```
+```bash output
+(lldb) process attach --pid 2234
+Process 2234 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = signal SIGSTOP
+    frame #0: 0x00007ff8082ebb4e libsystem_kernel.dylib`mach_msg2_trap + 10
+libsystem_kernel.dylib`mach_msg2_trap:
+->  0x7ff8082ebb4e <+10>: retq
+    0x7ff8082ebb4f <+11>: nop
 
-```text
-Kindle load address (header) = 0x100e8a000
-slide                        = 0x00e8a000
-
-0x1005B7705 + 0xe8a000 = 0x101441705   <- break here (EVP call; read `rcx`/`r8`)
-0x1005B75F0 + 0xe8a000 = 0x1014415f0   <- adapter entry only (read `rsi` for key)
+libsystem_kernel.dylib`macx_swapon:
+    0x7ff8082ebb50 <+0>:  movq   %rcx, %r10
+    0x7ff8082ebb53 <+3>:  movl   $0x1000030, %eax ; imm = 0x1000030
+Target 0: (Kindle) stopped.
+Executable binary set to "/Applications/Kindle.app/Contents/MacOS/Kindle".
+Architecture set to: x86_64-apple-ios-macabi.
 ```
 
-## LLDB session
+Static addresses assume base `0x100000000`. `image list -o` prints the slide; add it to the static breakpoint address:
 
-I opened Kindle under Rosetta, opened the book, then attached LLDB and computed the slide from the module header:
+```text
+slide   = `image list -o -f Kindle`
+runtime = 0x1005B7705 + slide
+```
 
 ```bash command (lldb) LLDB
 image list -o -f Kindle
 ```
 ```bash output
-[  0] 0x0000000100e8a000 ... Kindle.app/Contents/MacOS/Kindle ...
+[  0] 0x0000000000e8a000 ... Kindle.app/Contents/MacOS/Kindle ...
 ```
 ```bash command (lldb) LLDB
-# slide = 0x100e8a000 - 0x100000000 = 0xe8a000
 breakpoint set -a 0x101441705
 ```
 ```bash output
@@ -494,8 +503,8 @@ Breakpoint 1: address = 0x101441705
 breakpoint command add 1
 ```
 ```bash output
-> memory read -s1 -fx -c16 $rcx   ; 16-byte AES key (EVP key argument)
-> memory read -s1 -fx -c16 $r8    ; 16-byte IV for this decrypt
+> memory read -s1 -fx -c16 $rcx   ; 16 bytes at key pointer in rcx
+> memory read -s1 -fx -c16 $r8    ; 16 bytes at IV pointer in r8
 > continue
 > DONE
 ```
@@ -506,11 +515,11 @@ continue
 I started paging through the book and the breakpoint fired almost immediately:
 
 ```text
-0x600001e40d80: 36 d7 ec 5f fe 92 a7 3a f3 de c8 1b 29 9e 30 0a   ; rcx (key)
-0x600001ef8330: 8a d8 06 43 fa d0 05 b2 db f7 02 90 67 c3 12 b0   ; r8 (iv)
+0x600001e40d80: 36 d7 ec 5f fe 92 a7 3a f3 de c8 1b 29 9e 30 0a   ; memory at $rcx (key)
+0x600001ef8330: 8a d8 06 43 fa d0 05 b2 db f7 02 90 67 c3 12 b0   ; memory at $r8 (iv)
 ```
 
-That 32-character hex string from `rcx` is the per-book AES key. The IV is useful to confirm you have the right decrypt, but each protected Ion record stores its own IV at `sid::22` in the `.azw8` / `.azw9.res` files, so capturing the IV from LLDB doesn't really do much for you.
+The IV is useful to confirm you have the right decrypt, but each protected Ion record stores its own IV at `sid::22` in the `.azw8` / `.azw9.res` files, so in the end, capturing the IV here doesn't really help us.
 
 Here is a video of me showing this process on a random book:
 
